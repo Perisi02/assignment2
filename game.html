@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Te Wai-o-Tane - Game</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./gamestyle.css">
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <header class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="./index.html">Te Wai-o-Tane</a>
             <div class="collapse navbar-collapse">
@@ -19,16 +22,21 @@
             </div>
 
         </div>
-
-    </nav>
+    </header>
     <main>
+        <section class="center-wrap">
+            <h2 class="underline">Part 2 - Game</h2>
+            <canvas id="gamecanvas" width="800" height="600"></canvas>
 
+        </section>
+        
+        <footer>
+
+        </footer>
     </main>
-    <footer>
 
-    </footer>   
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./gamescript.js"></script>
 </body>
+
 </html>
