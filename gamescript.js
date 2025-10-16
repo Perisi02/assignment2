@@ -23,7 +23,7 @@ function StartGame() {
     // Cloud animation
     const cloud = {
         x: 0,
-        y: 120,
+        y: -100,
         w: 0,
         h: 0,
         speed: 40
@@ -76,7 +76,7 @@ function StartGame() {
         ctx.drawImage(backgroundOcean, 0, -100, canvas.width, canvas.height); // Too much sky, so added this to show more ocean
 
         // Cloud
-        ctx.drawImage(backgroundCloud, cloud.x, cloud.y, cloud.w, cloud.h);
+        ctx.drawImage(backgroundCloud, cloud.x, cloud.y, canvas.width, canvas.height);
     }
 }
 
