@@ -1,5 +1,5 @@
 function StartGame() {
-    // Background img  ocean from:
+    // Background img from:
     // https://opengameart.org/content/pixel-ocean-and-sky-background
     const backgroundOcean = new Image();
     backgroundOcean.src = "./game_assets/Ocean.png";
@@ -23,16 +23,15 @@ function StartGame() {
 
     let canvas;
     let ctx;
-    
+
     let lastTimeStamp = 0;
+    let dt;
 
     let character;
+    let semicircle = [];
+    let semiRadius = 15;
 
     const boundaryOceanTop = 280;
-
-    window.onload = function () {
-        load();
-    };
 
     // Cloud dimensions
     const cloud = {
@@ -42,11 +41,58 @@ function StartGame() {
         h: 0,
         speed: 40
     };
-
+    
     function load() {
         loadCount++;
         if (loadCount >= awaitLoadCount) {
             init();
+        }
+    }
+
+    function drawBackground() {
+        // Ocean background
+        ctx.drawImage(backgroundOcean, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundOcean, 0, -100, canvas.width, canvas.height); // Too much sky, did this to show more ocean
+
+        // Cloud
+        ctx.drawImage(backgroundCloud, cloud.x, cloud.y, canvas.width, canvas.height);
+    }
+
+    function drawSemicircle() {
+        for (let sc of semicircle) {
+            ctx.beginPath();
+            ctx.arc(sc.x, sc.y, sc.radius, 0, Math.PI, true);
+            ctx.fillStyle = sc.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+
+    function spawnSemicircle(amount) {
+        let semiMaxY = canvas.height - 100;
+        let semiMinY = boundaryOceanTop + 50;
+
+        for (let i = 0; i < amount; i++) {
+            semicircle.push({
+                x: canvas.width + 30,
+                y: Math.random() * (semiMaxY - semiMinY) + semiMinY,
+                radius: semiRadius,
+                color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                speed: Math.random() * 50 + 20
+            });
+        }
+    }
+
+    function resetSemicircle() {
+        for (let i = semicircle.length - 1; i >= 0; i--) {
+            let sc = semicircle[i];
+            sc.x -= sc.speed * dt;
+
+            if (sc.x + sc.radius < 0) {
+                semicircle.splice(i, 1);
+
+                spawnSemicircle(1);
+            }
         }
     }
 
@@ -56,28 +102,28 @@ function StartGame() {
         ctx = canvas.getContext('2d');
 
         // Background - Cloud
-        const maxCloudW = canvas.width * 0.5;
-        const scale = Math.min(1, maxCloudW / backgroundCloud.width);
-        cloud.w = backgroundCloud.width * scale;
-        cloud.h = backgroundCloud.height * scale;
         cloud.x = canvas.width;
+
+        // Semi-circles - trash/pollution
+        spawnSemicircle(8);
 
         // Kayak character
         character = Character(
             characterSpriteSheet,
             [128, 48],
             [
-                // Go right
+                // Right
                 [
                     [0, 0], [128, 0], [256, 0], [384, 0], [512, 0], [640, 0], [768, 0], [896, 0], [1024, 0]
                 ],
-                // Go left
+                // Left
                 [
                     [1024, 48], [896, 48], [768, 48], [640, 48], [512, 48], [384, 48], [256, 48], [128, 48], [0, 48]
                 ],
             ],
             1
         );
+
         character.init();
 
         document.addEventListener("keydown", doKeyDown);
@@ -89,7 +135,7 @@ function StartGame() {
     // Game loop
     function run(timeStamp) {
         if (!lastTimeStamp) lastTimeStamp = timeStamp;
-        const dt = (timeStamp - lastTimeStamp) / 1000;
+        dt = (timeStamp - lastTimeStamp) / 1000;
         lastTimeStamp = timeStamp;
 
         update(dt);
@@ -104,18 +150,15 @@ function StartGame() {
             cloud.x = canvas.width;
         }
 
+        resetSemicircle();
+
         if (character) character.update(dt);
 
     }
 
     function draw() {
-        // Ocean background
-        ctx.drawImage(backgroundOcean, 0, 0, canvas.width, canvas.height);
-        ctx.drawImage(backgroundOcean, 0, -100, canvas.width, canvas.height); // Too much sky, did this to show more ocean
-
-        // Cloud
-        ctx.drawImage(backgroundCloud, cloud.x, cloud.y, canvas.width, canvas.height);
-
+        drawBackground();
+        drawSemicircle();
         // Character
         character.draw(ctx);
     }
@@ -129,7 +172,6 @@ function StartGame() {
         e.preventDefault();
         if (character != undefined) { character.doKeyInput(e.key, false); }
     }
-
 
     // Create and return a new Character object.
     // Param: spritesheet = Image object
@@ -155,7 +197,7 @@ function StartGame() {
             velocity: 100,
 
             init() {
-                console.log("init");
+                console.log("init character");
 
                 this.spriteCanvasSize = [
                     this.spriteFrameSize[0] * this.spriteScale,
@@ -165,7 +207,7 @@ function StartGame() {
 
             action(action) {
                 console.log(`action: ${action}. Animation Frame ${this.animationFrame}`);
-                
+
                 if (action === this.lastAction) return;
 
                 switch (action) {
@@ -229,7 +271,7 @@ function StartGame() {
                 if (this.position[0] + spriteW > canvasWidth) this.position[0] = canvasWidth - spriteW;
                 // Top
                 if (this.position[1] < boundaryOceanTop) this.position[1] = boundaryOceanTop;
-                // Botton
+                // Bottom
                 if (this.position[1] + spriteH > canvasHeight) this.position[1] = canvasHeight - spriteH;
             },
 
@@ -272,15 +314,6 @@ function StartGame() {
             }
         };
     }
-
-    // Semi-Circles (floating trash)
-    // const semiCircles = [];
-    // const semiMaxCount = 6;
-    // const semiRadius = 40;
-
-    // function spawnTrash() {
-    //     const minY = 
-    // }
 }
 
 StartGame();
