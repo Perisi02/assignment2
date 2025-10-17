@@ -73,7 +73,7 @@ function StartGame() {
                 ],
                 // Go left
                 [
-                    [0, 48], [128, 48], [256, 48], [384, 48], [512, 48], [640, 48], [768, 48], [896, 48], [1024, 48]
+                    [1024, 48], [896, 48], [768, 48], [640, 48], [512, 48], [384, 48], [256, 48], [128, 48], [0, 48]
                 ],
             ],
             1
@@ -107,6 +107,7 @@ function StartGame() {
         if (character) character.update(dt);
 
     }
+
 
     function draw() {
         // Ocean background
@@ -149,9 +150,9 @@ function StartGame() {
             timeSinceLastFrame: 0,
             lastAction: "",
 
-            position: [0, 0],
+            position: [0, 400],
             direction: [0, 0],
-            velocity: 200,
+            velocity: 100,
 
             init() {
                 console.log("init");
@@ -202,19 +203,19 @@ function StartGame() {
                 this.lastAction = action;
             },
 
-            update(tick) {
-                this.timeSinceLastFrame += tick;
+            update(dt) {
+                this.timeSinceLastFrame += dt * 1000;
 
                 if (this.timeSinceLastFrame >= this.frameTime) {
-                    this.timeSinceLastFrame = 0;
+                    this.timeSinceLastFrame -= this.frameTime;
 
                     if (this.direction[0] !== 0 || this.direction[1] !== 0) {
                         this.animationFrame = (this.animationFrame + 1) % this.spriteFrames[this.animationTrack].length;
                     }
                 }
 
-                this.position[0] += this.direction[0] * tick;
-                this.position[1] -= this.direction[1] * tick;
+                this.position[0] += this.direction[0] * dt;
+                this.position[1] -= this.direction[1] * dt;
             },
 
             draw(context) {
