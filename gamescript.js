@@ -25,7 +25,6 @@ function StartGame() {
     let ctx;
     
     let lastTimeStamp = 0;
-    let tick = 0;
 
     let character;
 
@@ -107,7 +106,6 @@ function StartGame() {
         if (character) character.update(dt);
 
     }
-
 
     function draw() {
         // Ocean background
@@ -216,6 +214,21 @@ function StartGame() {
 
                 this.position[0] += this.direction[0] * dt;
                 this.position[1] -= this.direction[1] * dt;
+
+                // Boundary for character movement
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const spriteW = this.spriteCanvasSize[0];
+                const spriteH = this.spriteCanvasSize[1];
+
+                // Left
+                if (this.position[0] < 0) this.position[0] = 0;
+                // Right
+                if (this.position[0] + spriteW > canvasWidth) this.position[0] = canvasWidth - spriteW;
+                // Top
+                if (this.position[1] < 280) this.position[1] = 280;
+                // Botton
+                if (this.position[1] + spriteH > canvasHeight) this.position[1] = canvasHeight - spriteH;
             },
 
             draw(context) {
