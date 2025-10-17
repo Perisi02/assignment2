@@ -28,11 +28,13 @@ function StartGame() {
 
     let character;
 
+    const boundaryOceanTop = 280;
+
     window.onload = function () {
         load();
     };
 
-    // Cloud animation
+    // Cloud dimensions
     const cloud = {
         x: 0,
         y: -100,
@@ -52,7 +54,6 @@ function StartGame() {
         console.log("init");
         canvas = document.getElementById('gamecanvas');
         ctx = canvas.getContext('2d');
-
 
         // Background - Cloud
         const maxCloudW = canvas.width * 0.5;
@@ -128,6 +129,7 @@ function StartGame() {
         e.preventDefault();
         if (character != undefined) { character.doKeyInput(e.key, false); }
     }
+
 
     // Create and return a new Character object.
     // Param: spritesheet = Image object
@@ -226,7 +228,7 @@ function StartGame() {
                 // Right
                 if (this.position[0] + spriteW > canvasWidth) this.position[0] = canvasWidth - spriteW;
                 // Top
-                if (this.position[1] < 280) this.position[1] = 280;
+                if (this.position[1] < boundaryOceanTop) this.position[1] = boundaryOceanTop;
                 // Botton
                 if (this.position[1] + spriteH > canvasHeight) this.position[1] = canvasHeight - spriteH;
             },
@@ -270,6 +272,15 @@ function StartGame() {
             }
         };
     }
+
+    // Semi-Circles (floating trash)
+    // const semiCircles = [];
+    // const semiMaxCount = 6;
+    // const semiRadius = 40;
+
+    // function spawnTrash() {
+    //     const minY = 
+    // }
 }
 
 StartGame();
