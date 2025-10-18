@@ -47,6 +47,7 @@ function StartGame() {
 
     let showHitbox = false;
     let showCritical = false;
+    let collidingIndex = -1;
     
     const boundaryOceanTop = 280;
 
@@ -344,8 +345,11 @@ function StartGame() {
 
         const charRect = character.characterHitbox();
         showCritical = false;
+        collidingIndex = -1;
 
-        for (const sc of semicircle) {
+
+        for (let i = 0; i < semicircle.length; i++) {
+            const sc = semicircle[i];
             const semiRect = {
                 x: sc.x - sc.radius,
                 y: sc.y - sc.radius,
@@ -355,6 +359,8 @@ function StartGame() {
             if (checkCollision(charRect, semiRect)) {
                 console.log("Collision detected");
                 showCritical = true;
+                collidingIndex = i;
+                break;
             };
         };
     };
@@ -375,6 +381,17 @@ function StartGame() {
 
     function doKeyDown(e) {
         e.preventDefault();
+
+        if ((e.code === "Space" || e.key === " ") && !e.repeat) {
+            if (collidingIndex !== -1) {
+                removeSemicircle(collidingIndex);
+                collidingIndex = -1;
+                showCritical = false;
+                spawnSemicircle(1);
+            }
+            return;
+        }
+
         if (character != undefined) { character.doKeyInput(e.key, true); }
     };
 
