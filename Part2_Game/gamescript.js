@@ -22,25 +22,25 @@ function StartGame() {
     const awaitLoadCount = 3;
     let loadCount = 0;
 
-    let canvas;
-    let ctx;
+    let canvas = document.getElementById('gamecanvas');
+    let ctx = canvas.getContext('2d');
 
     let lastTimeStamp = 0;
     let dt;
 
     let character;
+    let charMoveSpeed = 100;
+
     let semicircle = [];
     let semiRadius = 15;
+    let semiMaxSpeed = 70;
+    let semiMinSpeed = 50;
 
     const boundaryOceanTop = 280;
 
-    // Cloud dimensions
     const cloud = {
         x: 0,
-        y: -100,
-        w: 0,
-        h: 0,
-        speed: 40
+        speed: 35
     };
     
     function load() {
@@ -51,11 +51,8 @@ function StartGame() {
     }
 
     function drawBackground() {
-        // Ocean background
         ctx.drawImage(backgroundOcean, 0, 0, canvas.width, canvas.height);
-
-        // Cloud
-        ctx.drawImage(backgroundCloud, cloud.x, cloud.y, canvas.width, canvas.height);
+        ctx.drawImage(backgroundCloud, cloud.x, -100, canvas.width, canvas.height);
     }
 
     function drawSemicircle() {
@@ -78,7 +75,7 @@ function StartGame() {
                 y: Math.random() * (semiMaxY - semiMinY) + semiMinY,
                 radius: semiRadius,
                 color: `hsl(${Math.random() * 360}, 70%, 60%)`,
-                speed: Math.random() * 50 + 20
+                speed: Math.random() * semiMaxSpeed + semiMinSpeed
             });
         }
     }
@@ -96,15 +93,15 @@ function StartGame() {
         }
     }
 
+    function semicircleHitbox() {
+
+    }
+
     function init() {
         console.log("init");
-        canvas = document.getElementById('gamecanvas');
-        ctx = canvas.getContext('2d');
 
-        // Background - Cloud
-        cloud.x = canvas.width;
+        // cloud.x = canvas.width;
 
-        // Semi-circles - trash/pollution
         spawnSemicircle(8);
 
         // Kayak character
@@ -132,7 +129,6 @@ function StartGame() {
         window.requestAnimationFrame(run);
     }
 
-    // Game loop
     function run(timeStamp) {
         if (!lastTimeStamp) lastTimeStamp = timeStamp;
         dt = (timeStamp - lastTimeStamp) / 1000;
@@ -159,7 +155,6 @@ function StartGame() {
     function draw() {
         drawBackground();
         drawSemicircle();
-        // Character
         character.draw(ctx);
     }
 
@@ -194,7 +189,7 @@ function StartGame() {
 
             position: [0, 400],
             direction: [0, 0],
-            velocity: 100,
+            velocity: charMoveSpeed,
 
             init() {
                 console.log("init character");
