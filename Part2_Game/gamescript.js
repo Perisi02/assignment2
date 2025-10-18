@@ -217,24 +217,20 @@ function StartGame() {
                 this.position[0] += this.direction[0] * dt;
                 this.position[1] -= this.direction[1] * dt;
 
-                // Boundary for character movement
+                // Canvas boundary for character movement
                 const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
                 const spriteW = this.spriteCanvasSize[0];
                 const spriteH = this.spriteCanvasSize[1];
 
-                // Left
                 if (this.position[0] < 0) this.position[0] = 0;
-                // Right
                 if (this.position[0] + spriteW > canvasWidth) this.position[0] = canvasWidth - spriteW;
-                // Top
                 if (this.position[1] < boundaryOceanTop) this.position[1] = boundaryOceanTop;
-                // Bottom
                 if (this.position[1] + spriteH > canvasHeight) this.position[1] = canvasHeight - spriteH;
             },
 
             draw(context) {
-                context.drawImage( // Character
+                context.drawImage(
                     this.spriteSheet,
                     this.spriteFrames[this.animationTrack][this.animationFrame][0],
                     this.spriteFrames[this.animationTrack][this.animationFrame][1],
@@ -273,7 +269,6 @@ function StartGame() {
                         else this.action("noMoveHorizontal");
                         break;
                     default:
-                        if (!isKeydown) this.action("stop");
                         break;
                 }
             }
@@ -381,7 +376,7 @@ function StartGame() {
 
     function doKeyDown(e) {
         e.preventDefault();
-
+        
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
                 removeSemicircle(collidingIndex);
@@ -389,15 +384,14 @@ function StartGame() {
                 showCritical = false;
                 spawnSemicircle(1);
             }
-            return;
         }
 
-        if (character != undefined) { character.doKeyInput(e.key, true); }
+        character.doKeyInput(e.key, true);
     };
 
     function doKeyUp(e) {
         e.preventDefault();
-        if (character != undefined) { character.doKeyInput(e.key, false); }
+        character.doKeyInput(e.key, false);
     };
 }
 
