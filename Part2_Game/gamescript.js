@@ -36,15 +36,16 @@ function StartGame() {
     let dt;
     
     let character;
-    let charMoveSpeed = 100;
+    let charMoveSpeed = 95;
     let charScale = 0.8;
     
     let semicircle = [];
-    let semiRadius = 15;
+    let semiRadius = 12;
+
     let semiMaxSpeed = 90;
     let semiMinSpeed = 80;
 
-    let showHitbox = true;
+    let showHitbox = false;
     let showCritical = false;
     
     const boundaryOceanTop = 280;
@@ -72,6 +73,9 @@ function StartGame() {
             ctx.arc(sc.x, sc.y, sc.radius, 0, Math.PI, true);
             ctx.fillStyle = sc.color;
             ctx.fill();
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1;
+            ctx.stroke();
             ctx.closePath();
 
             // Hitbox
@@ -98,6 +102,12 @@ function StartGame() {
             semicircle.push({
                 x: canvas.width + 30,
                 y: Math.random() * (semiMaxY - semiMinY) + semiMinY,
+                baseRadius: semiRadius,
+                amplitude: 0.8,
+                frequency: 1.5,
+                phase: Math.random() * Math.PI * 2,
+                t: 0,
+
                 radius: semiRadius,
                 color: `hsl(${Math.random() * 360}, 70%, 60%)`,
                 speed: Math.random() * (semiMaxSpeed - semiMinSpeed) + semiMinSpeed
@@ -274,7 +284,7 @@ function StartGame() {
 
         let count = 0;
         while (count < 10) {
-            setTimeout(() => spawnSemicircle(Math.random() * 2), count * 1000);
+            setTimeout(() => spawnSemicircle(Math.random() * 2), count * 2000);
             count++;
         }
 
@@ -321,6 +331,9 @@ function StartGame() {
         for (let i = semicircle.length - 1; i >= 0; i--) {
             let sc = semicircle[i];
             sc.x -= sc.speed * dt;
+            sc.t += dt;
+
+            sc.radius = sc.baseRadius + sc.amplitude * Math.sin(2 * Math.PI * sc.frequency * sc.t + sc.phase);
 
             if (sc.x + sc.radius < 0) {
                 console.log("Semicircle missed");
