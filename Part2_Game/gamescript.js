@@ -17,9 +17,15 @@ function StartGame() {
     // Edited in Drawio to add a second row facing opposite direction
     const characterSpriteSheet = new Image();
     characterSpriteSheet.src = "./game_assets/Kayak.png"
-    characterSpriteSheet.onload = load
+    characterSpriteSheet.onload = load;
 
-    const awaitLoadCount = 3;
+    // Image from:
+    // https://www.flaticon.com/free-icon/critical_7037197
+    const critical = new Image();
+    critical.src = "./game_assets/critical.png";
+    critical.onload = load;
+
+    const awaitLoadCount = 4;
     let loadCount = 0;
 
     let canvas = document.getElementById('gamecanvas');
@@ -28,18 +34,19 @@ function StartGame() {
     // Timing
     let lastTimeStamp = 0;
     let dt;
-
-    let showHitbox = true;
-
+    
     let character;
     let charMoveSpeed = 100;
     let charScale = 0.8;
-
+    
     let semicircle = [];
     let semiRadius = 15;
     let semiMaxSpeed = 90;
     let semiMinSpeed = 80;
 
+    let showHitbox = true;
+    let showCritical = false;
+    
     const boundaryOceanTop = 280;
 
     const cloud = {
@@ -98,18 +105,8 @@ function StartGame() {
         }
     };
 
-
-
-    function resetSemicircle(amount) {
-        for (let i = semicircle.length - 1; i >= 0; i--) {
-            let sc = semicircle[i];
-
-            if (sc.x + sc.radius < 0) {
-                semicircle.splice(i, 1);
-
-                spawnSemicircle(amount);
-            }
-        }
+    function removeSemicircle(index) {
+        semicircle.splice(index, 1);
     };
 
     // Create and return a new Character object.
@@ -281,7 +278,6 @@ function StartGame() {
             count++;
         }
 
-        // Kayak character
         character = Character(
             characterSpriteSheet,
             [128, 48],
@@ -325,9 +321,17 @@ function StartGame() {
         for (let i = semicircle.length - 1; i >= 0; i--) {
             let sc = semicircle[i];
             sc.x -= sc.speed * dt;
+
+            if (sc.x + sc.radius < 0) {
+                console.log("Semicircle missed");
+                removeSemicircle(i);
+                spawnSemicircle(1);
+            }
         }
 
         const charRect = character.characterHitbox();
+        showCritical = false;
+
         for (const sc of semicircle) {
             const semiRect = {
                 x: sc.x - sc.radius,
@@ -337,19 +341,23 @@ function StartGame() {
             };
             if (checkCollision(charRect, semiRect)) {
                 console.log("Collision detected");
-
+                showCritical = true;
             };
         };
-
-        resetSemicircle(1);
-
-
     };
 
     function draw() {
         drawBackground();
         drawSemicircle();
         character.draw(ctx);
+
+        if (showCritical) {
+            const [cx, cy] = character.position;
+            const imgWidth = 30;
+            const imgHeight = 30;
+            const offsetY = -30;
+            ctx.drawImage(critical, cx + (character.spriteCanvasSize[0] / 2) - (imgWidth / 2), cy + offsetY, imgWidth, imgHeight);
+        }
     };
 
     function doKeyDown(e) {
