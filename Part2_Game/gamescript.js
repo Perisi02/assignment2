@@ -28,13 +28,16 @@ function StartGame() {
     let lastTimeStamp = 0;
     let dt;
 
+    let showHitbox = true;
+
     let character;
     let charMoveSpeed = 100;
+    let charScale = 0.8;
 
     let semicircle = [];
     let semiRadius = 15;
-    let semiMaxSpeed = 70;
-    let semiMinSpeed = 50;
+    let semiMaxSpeed = 90;
+    let semiMinSpeed = 80;
 
     const boundaryOceanTop = 280;
 
@@ -42,7 +45,7 @@ function StartGame() {
         x: 0,
         speed: 35
     };
-    
+
     function load() {
         loadCount++;
         if (loadCount >= awaitLoadCount) {
@@ -62,6 +65,20 @@ function StartGame() {
             ctx.fillStyle = sc.color;
             ctx.fill();
             ctx.closePath();
+
+            // Hitbox
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+
+            const x = sc.x - sc.radius;
+            const y = sc.y - sc.radius;
+            const width = sc.radius * 2;
+            const height = sc.radius;
+
+            if (showHitbox) {
+                ctx.strokeRect(x, y, width, height);
+
+            }
         }
     }
 
@@ -75,7 +92,7 @@ function StartGame() {
                 y: Math.random() * (semiMaxY - semiMinY) + semiMinY,
                 radius: semiRadius,
                 color: `hsl(${Math.random() * 360}, 70%, 60%)`,
-                speed: Math.random() * semiMaxSpeed + semiMinSpeed
+                speed: Math.random() * (semiMaxSpeed - semiMinSpeed) + semiMinSpeed
             });
         }
     }
@@ -93,32 +110,24 @@ function StartGame() {
         }
     }
 
-    function semicircleHitbox() {
-
-    }
-
     function init() {
         console.log("init");
 
-        // cloud.x = canvas.width;
-
-        spawnSemicircle(8);
+        let count = 0;
+        while (count < 10) {
+            setTimeout(() => spawnSemicircle(2), count * 1000);
+            count++;
+        }
 
         // Kayak character
         character = Character(
             characterSpriteSheet,
             [128, 48],
             [
-                // Right
-                [
-                    [0, 0], [128, 0], [256, 0], [384, 0], [512, 0], [640, 0], [768, 0], [896, 0], [1024, 0]
-                ],
-                // Left
-                [
-                    [1024, 48], [896, 48], [768, 48], [640, 48], [512, 48], [384, 48], [256, 48], [128, 48], [0, 48]
-                ],
+                [[0, 0], [128, 0], [256, 0], [384, 0], [512, 0], [640, 0], [768, 0], [896, 0], [1024, 0]],
+                [[1024, 48], [896, 48], [768, 48], [640, 48], [512, 48], [384, 48], [256, 48], [128, 48], [0, 48]],
             ],
-            1
+            charScale
         );
 
         character.init();
@@ -271,7 +280,7 @@ function StartGame() {
             },
 
             draw(context) {
-                context.drawImage(
+                context.drawImage( // Character
                     this.spriteSheet,
                     this.spriteFrames[this.animationTrack][this.animationFrame][0],
                     this.spriteFrames[this.animationTrack][this.animationFrame][1],
@@ -282,6 +291,26 @@ function StartGame() {
                     this.spriteCanvasSize[0],
                     this.spriteCanvasSize[1]
                 );
+
+                // Hitbox for character
+                this.hitbox = {
+                    offsetX: 40,
+                    offsetY: 10,
+                    width: 35,
+                    height: 40,
+                    scale: 0.5
+                };
+
+                context.strokeStyle = "red";
+                context.lineWidth = 2;
+                if (showHitbox) {
+                    context.strokeRect( // pos xy, size xy
+                        this.position[0] + this.hitbox.offsetX,
+                        this.position[1] + this.hitbox.offsetY,
+                        this.hitbox.width * this.hitbox.scale,
+                        this.hitbox.height * this.hitbox.scale
+                    );
+                }
             },
 
             doKeyInput(e, isKeydown = true) {
