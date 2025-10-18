@@ -1,29 +1,36 @@
 function StartGame() {
-    // Background img from:
+    // Credit: CraftPix.net 2D Game Assets on opengameart.org
     // https://opengameart.org/content/pixel-ocean-and-sky-background
     // Edited the original to show more ocean.
     const backgroundOcean = new Image();
-    backgroundOcean.src = "./game_assets/Ocean_Edited.png";
+    backgroundOcean.src = "./assets/images/Ocean_Edited.png";
     backgroundOcean.onload = load;
 
-    // Background img from:
+    // Credit: CraftPix.net 2D Game Assets on opengameart.org
     // https://opengameart.org/content/pixel-ocean-and-sky-background
     const backgroundCloud = new Image();
-    backgroundCloud.src = "./game_assets/cloud.png";
+    backgroundCloud.src = "./assets/images/cloud.png";
     backgroundCloud.onload = load;
 
-    // Kayak img from:
+    // Credit: Spring Spring on opengameart.org 
     // https://opengameart.org/content/kajak
     // Edited in Drawio to add a second row facing opposite direction
     const characterSpriteSheet = new Image();
-    characterSpriteSheet.src = "./game_assets/Kayak.png"
+    characterSpriteSheet.src = "./assets/images/Kayak.png";
     characterSpriteSheet.onload = load;
 
-    // Image from:
-    // https://www.flaticon.com/free-icon/critical_7037197
+    // Credit: Febrian Hidayat on flaticon.com
+    // // https://www.flaticon.com/free-icon/critical_7037197
     const critical = new Image();
-    critical.src = "./game_assets/critical.png";
+    critical.src = "./assets/images/critical.png";
     critical.onload = load;
+
+    // Credit: s11it0 on freesound.org
+    // https:wwww.freesound.org/s/620668/
+    // const soundCoin = new Sound();
+    // soundCoin.src = "./assets/sounds/happy-coin.wav";
+    // soundCoin.onload = load;
+    var audioCollect = new Audio("./assets/sounds/happy-coin.wav");
 
     const awaitLoadCount = 4;
     let loadCount = 0;
@@ -276,10 +283,8 @@ function StartGame() {
     };
 
     function init() {
-        console.log("init game");
-
         let count = 0;
-        while (count < 10) {
+        while (count < 8) {
             setTimeout(() => spawnSemicircle(Math.random() * 2), count * 2000);
             count++;
         }
@@ -379,7 +384,10 @@ function StartGame() {
         
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
+
+                console.log("Semicircle collected");
                 removeSemicircle(collidingIndex);
+                audioCollect.play();
                 collidingIndex = -1;
                 showCritical = false;
                 spawnSemicircle(1);
