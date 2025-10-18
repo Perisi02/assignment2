@@ -1,8 +1,9 @@
 function StartGame() {
     // Background img from:
     // https://opengameart.org/content/pixel-ocean-and-sky-background
+    // Edited the original to show more ocean.
     const backgroundOcean = new Image();
-    backgroundOcean.src = "./game_assets/Ocean.png";
+    backgroundOcean.src = "./game_assets/Ocean_Edited.png";
     backgroundOcean.onload = load;
 
     // Background img from:
@@ -52,7 +53,6 @@ function StartGame() {
     function drawBackground() {
         // Ocean background
         ctx.drawImage(backgroundOcean, 0, 0, canvas.width, canvas.height);
-        ctx.drawImage(backgroundOcean, 0, -100, canvas.width, canvas.height); // Too much sky, did this to show more ocean
 
         // Cloud
         ctx.drawImage(backgroundCloud, cloud.x, cloud.y, canvas.width, canvas.height);
