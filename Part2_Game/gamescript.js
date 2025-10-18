@@ -25,6 +25,7 @@ function StartGame() {
     let canvas = document.getElementById('gamecanvas');
     let ctx = canvas.getContext('2d');
 
+    // Timing
     let lastTimeStamp = 0;
     let dt;
 
@@ -51,12 +52,12 @@ function StartGame() {
         if (loadCount >= awaitLoadCount) {
             init();
         }
-    }
+    };
 
     function drawBackground() {
         ctx.drawImage(backgroundOcean, 0, 0, canvas.width, canvas.height);
         ctx.drawImage(backgroundCloud, cloud.x, -100, canvas.width, canvas.height);
-    }
+    };
 
     function drawSemicircle() {
         for (let sc of semicircle) {
@@ -67,20 +68,20 @@ function StartGame() {
             ctx.closePath();
 
             // Hitbox
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 2;
-
-            const x = sc.x - sc.radius;
-            const y = sc.y - sc.radius;
-            const width = sc.radius * 2;
-            const height = sc.radius;
+            const semiHitbox = {
+                x: sc.x - sc.radius,
+                y: sc.y - sc.radius,
+                width: sc.radius * 2,
+                height: sc.radius
+            };
 
             if (showHitbox) {
-                ctx.strokeRect(x, y, width, height);
-
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(semiHitbox.x, semiHitbox.y, semiHitbox.width, semiHitbox.height);
             }
         }
-    }
+    };
 
     function spawnSemicircle(amount) {
         let semiMaxY = canvas.height - 100;
@@ -95,87 +96,21 @@ function StartGame() {
                 speed: Math.random() * (semiMaxSpeed - semiMinSpeed) + semiMinSpeed
             });
         }
-    }
+    };
 
-    function resetSemicircle() {
+
+
+    function resetSemicircle(amount) {
         for (let i = semicircle.length - 1; i >= 0; i--) {
             let sc = semicircle[i];
-            sc.x -= sc.speed * dt;
 
             if (sc.x + sc.radius < 0) {
                 semicircle.splice(i, 1);
 
-                spawnSemicircle(1);
+                spawnSemicircle(amount);
             }
         }
-    }
-
-    function init() {
-        console.log("init");
-
-        let count = 0;
-        while (count < 10) {
-            setTimeout(() => spawnSemicircle(2), count * 1000);
-            count++;
-        }
-
-        // Kayak character
-        character = Character(
-            characterSpriteSheet,
-            [128, 48],
-            [
-                [[0, 0], [128, 0], [256, 0], [384, 0], [512, 0], [640, 0], [768, 0], [896, 0], [1024, 0]],
-                [[1024, 48], [896, 48], [768, 48], [640, 48], [512, 48], [384, 48], [256, 48], [128, 48], [0, 48]],
-            ],
-            charScale
-        );
-
-        character.init();
-
-        document.addEventListener("keydown", doKeyDown);
-        document.addEventListener("keyup", doKeyUp);
-
-        window.requestAnimationFrame(run);
-    }
-
-    function run(timeStamp) {
-        if (!lastTimeStamp) lastTimeStamp = timeStamp;
-        dt = (timeStamp - lastTimeStamp) / 1000;
-        lastTimeStamp = timeStamp;
-
-        update(dt);
-        draw();
-        window.requestAnimationFrame(run);
-    }
-
-    function update(dt) {
-        cloud.x -= cloud.speed * dt;
-
-        if (cloud.x + canvas.width < 0) {
-            cloud.x = canvas.width;
-        }
-
-        resetSemicircle();
-
-        if (character) character.update(dt);
-
-    }
-
-    function draw() {
-        drawBackground();
-        drawSemicircle();
-        character.draw(ctx);
-    }
-
-    function doKeyDown(e) {
-        e.preventDefault();
-        if (character != undefined) { character.doKeyInput(e.key, true); }
-    }
-
-    function doKeyUp(e) {
-        e.preventDefault();
-        if (character != undefined) { character.doKeyInput(e.key, false); }
-    }
+    };
 
     // Create and return a new Character object.
     // Param: spritesheet = Image object
@@ -190,6 +125,8 @@ function StartGame() {
             spriteScale: spriteScale,
             spriteCanvasSize: spriteSize,
 
+            hitbox: { offsetX: 40, offsetY: 10, width: 15, height: 20 },
+
             animationTrack: 0,
             animationFrame: 0,
             frameTime: 125,
@@ -199,6 +136,15 @@ function StartGame() {
             position: [0, 400],
             direction: [0, 0],
             velocity: charMoveSpeed,
+
+            characterHitbox() {
+                return {
+                    x: this.position[0] + this.hitbox.offsetX,
+                    y: this.position[1] + this.hitbox.offsetY,
+                    width:  this.hitbox.width,
+                    height: this.hitbox.height
+                };
+            },
 
             init() {
                 console.log("init character");
@@ -292,25 +238,12 @@ function StartGame() {
                     this.spriteCanvasSize[1]
                 );
 
-                // Hitbox for character
-                this.hitbox = {
-                    offsetX: 40,
-                    offsetY: 10,
-                    width: 35,
-                    height: 40,
-                    scale: 0.5
-                };
-
-                context.strokeStyle = "red";
-                context.lineWidth = 2;
                 if (showHitbox) {
-                    context.strokeRect( // pos xy, size xy
-                        this.position[0] + this.hitbox.offsetX,
-                        this.position[1] + this.hitbox.offsetY,
-                        this.hitbox.width * this.hitbox.scale,
-                        this.hitbox.height * this.hitbox.scale
-                    );
-                }
+                    const sh = this.characterHitbox();
+                    context.strokeStyle = "red";
+                    context.lineWidth = 2;
+                    context.strokeRect(sh.x, sh.y, sh.width, sh.height);
+                };
             },
 
             doKeyInput(e, isKeydown = true) {
@@ -337,7 +270,97 @@ function StartGame() {
                 }
             }
         };
-    }
+    };
+
+    function init() {
+        console.log("init game");
+
+        let count = 0;
+        while (count < 10) {
+            setTimeout(() => spawnSemicircle(Math.random() * 2), count * 1000);
+            count++;
+        }
+
+        // Kayak character
+        character = Character(
+            characterSpriteSheet,
+            [128, 48],
+            [
+                [[0, 0], [128, 0], [256, 0], [384, 0], [512, 0], [640, 0], [768, 0], [896, 0], [1024, 0]],
+                [[1024, 48], [896, 48], [768, 48], [640, 48], [512, 48], [384, 48], [256, 48], [128, 48], [0, 48]]
+            ],
+            charScale
+        );
+
+        character.init();
+
+        document.addEventListener("keydown", doKeyDown);
+        document.addEventListener("keyup", doKeyUp);
+
+        window.requestAnimationFrame(run);
+    };
+
+    function run(timeStamp) {
+        if (!lastTimeStamp) lastTimeStamp = timeStamp;
+        dt = (timeStamp - lastTimeStamp) / 1000;
+        lastTimeStamp = timeStamp;
+
+        update(dt);
+        draw();
+        window.requestAnimationFrame(run);
+    };
+
+    function checkCollision(rect1, rect2) {
+        const xOverlap = rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x;
+        const yOverlap = rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y;
+        return xOverlap && yOverlap;
+    };
+
+    function update(dt) {
+        cloud.x -= cloud.speed * dt;
+        if (cloud.x + canvas.width < 0) cloud.x = canvas.width;
+
+        if (character) character.update(dt);
+
+        for (let i = semicircle.length - 1; i >= 0; i--) {
+            let sc = semicircle[i];
+            sc.x -= sc.speed * dt;
+        }
+
+        const charRect = character.characterHitbox();
+        for (const sc of semicircle) {
+            const semiRect = {
+                x: sc.x - sc.radius,
+                y: sc.y - sc.radius,
+                width: sc.radius * 2,
+                height: sc.radius
+            };
+            if (checkCollision(charRect, semiRect)) {
+                console.log("Collision detected");
+
+            };
+        };
+
+        resetSemicircle(1);
+
+
+    };
+
+    function draw() {
+        drawBackground();
+        drawSemicircle();
+        character.draw(ctx);
+    };
+
+    function doKeyDown(e) {
+        e.preventDefault();
+        if (character != undefined) { character.doKeyInput(e.key, true); }
+    };
+
+    function doKeyUp(e) {
+        e.preventDefault();
+        if (character != undefined) { character.doKeyInput(e.key, false); }
+    };
 }
 
 StartGame();
