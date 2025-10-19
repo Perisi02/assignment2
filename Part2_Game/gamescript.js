@@ -26,11 +26,18 @@ function StartGame() {
     critical.onload = load;
 
     // Credit: s11it0 on freesound.org
-    // https:wwww.freesound.org/s/620668/
-    // const soundCoin = new Sound();
-    // soundCoin.src = "./assets/sounds/happy-coin.wav";
-    // soundCoin.onload = load;
-    var audioCollect = new Audio("./assets/sounds/happy-coin.wav");
+    // https://freesound.org/s/620668/
+    var audioCollect = new Audio("./assets/sounds/620668__s11it0__happy-coin.wav");
+
+    // Credit: Kayrabey07 on freessound.org
+    // https://freesound.org/s/543934/
+    var audioMissed = new Audio("./assets/sounds/543934__kayrabey07__uuhhh.mp3");
+
+    // Credit: Doctor_Dreamchip on freesound.org
+    // https://freesound.org/people/Doctor_Dreamchip/sounds/429347/
+    var audioBackground = new Audio("./assets/sounds/429347__doctor_dreamchip__2018-05-19.wav");
+    audioBackground.loop = true;
+    audioBackground.play();
 
     const awaitLoadCount = 4;
     let loadCount = 0;
@@ -284,7 +291,7 @@ function StartGame() {
 
     function init() {
         let count = 0;
-        while (count < 8) {
+        while (count < 6) {
             setTimeout(() => spawnSemicircle(Math.random() * 2), count * 2000);
             count++;
         }
@@ -338,6 +345,7 @@ function StartGame() {
 
             if (sc.x + sc.radius < 0) {
                 console.log("Semicircle missed");
+                audioMissed.play();
                 removeSemicircle(i);
                 spawnSemicircle(1);
             }
@@ -384,10 +392,9 @@ function StartGame() {
         
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
-
+                audioCollect.play();
                 console.log("Semicircle collected");
                 removeSemicircle(collidingIndex);
-                audioCollect.play();
                 collidingIndex = -1;
                 showCritical = false;
                 spawnSemicircle(1);
