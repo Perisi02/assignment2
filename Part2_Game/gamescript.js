@@ -48,6 +48,8 @@ function StartGame() {
     // Timing
     let lastTimeStamp = 0;
     let dt;
+
+    let isPaused = false;
     
     let character;
     let charMoveSpeed = 95;
@@ -62,6 +64,8 @@ function StartGame() {
     let showHitbox = false;
     let showCritical = false;
     let collidingIndex = -1;
+
+    let scoreTotal = 0;
     
     const boundaryOceanTop = 280;
 
@@ -319,8 +323,17 @@ function StartGame() {
         dt = (timeStamp - lastTimeStamp) / 1000;
         lastTimeStamp = timeStamp;
 
-        update(dt);
-        draw();
+        if (!isPaused) {
+            update(dt);
+            draw();
+        }
+        else {
+            ctx.font = "40px Arial";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
+        }
+
         window.requestAnimationFrame(run);
     };
 
@@ -390,18 +403,35 @@ function StartGame() {
     function doKeyDown(e) {
         e.preventDefault();
         
+        if (e.code === "Escape") {
+            isPaused = !isPaused;
+            if (isPaused) {
+                audioBackground.pause();
+                console.log("Game is paused");
+            }
+            else {
+                audioBackground.play();
+                console.log("Game is resumed");
+            }
+            return;
+        }
+
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
                 audioCollect.play();
+                
                 console.log("Semicircle collected");
+                
                 removeSemicircle(collidingIndex);
                 collidingIndex = -1;
                 showCritical = false;
                 spawnSemicircle(1);
             }
         }
-
-        character.doKeyInput(e.key, true);
+        
+        if (!isPaused) {
+            character.doKeyInput(e.key, true);
+        }
     };
 
     function doKeyUp(e) {
