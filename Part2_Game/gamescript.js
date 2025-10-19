@@ -65,7 +65,8 @@ function StartGame() {
     let showCritical = false;
     let collidingIndex = -1;
 
-    let scoreTotal = 0;
+    let score = 0;
+    let highscore = Number(localStorage.getItem("highscore") || 0);
     
     const boundaryOceanTop = 280;
 
@@ -318,6 +319,14 @@ function StartGame() {
         window.requestAnimationFrame(run);
     };
 
+    function drawScore() {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "left";
+        ctx.fillText(`Highscore: ${highscore}`, 16, 550);
+        ctx.fillText(`Score: ${score}`, 16, 520);
+    };
+
     function run(timeStamp) {
         if (!lastTimeStamp) lastTimeStamp = timeStamp;
         dt = (timeStamp - lastTimeStamp) / 1000;
@@ -390,6 +399,7 @@ function StartGame() {
         drawBackground();
         drawSemicircle();
         character.draw(ctx);
+        drawScore();
 
         if (showCritical) {
             const [cx, cy] = character.position;
@@ -411,7 +421,7 @@ function StartGame() {
             }
             else {
                 audioBackground.play();
-                console.log("Game is resumed");
+                console.log("Game playing");
             }
             return;
         }
@@ -419,8 +429,16 @@ function StartGame() {
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
                 audioCollect.play();
+
+                score += 1;
+
+                if (score > highscore) {
+                    highscore = score;
+                    localStorage.setItem("highscsore", String(highscore));
+                }
                 
                 console.log("Semicircle collected");
+                console.log("+1 Score");
                 
                 removeSemicircle(collidingIndex);
                 collidingIndex = -1;
