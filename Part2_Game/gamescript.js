@@ -31,6 +31,7 @@ function StartGame() {
     // Credit: s11it0 on freesound.org
     // https://freesound.org/s/620668/
     var audioCollect = new Audio("./assets/sounds/620668__s11it0__happy-coin.wav");
+    audioCollect.volume = 0.5;
 
     // Credit: Kayrabey07 on freessound.org
     // https://freesound.org/s/543934/
@@ -49,30 +50,29 @@ function StartGame() {
 
     let lastTimeStamp = 0;
     let dt;
-    
+
     let character;
     let charMoveSpeed = 95;
     let charScale = 0.8;
-    
+
     let semicircle = [];
     let semiRadius = 12;
     let semiMaxSpeed = 90;
     let semiMinSpeed = 80;
-    
+
     let showHitbox = false;
-    
+
     let showCritical = false;
     let collidingIndex = -1;
-    
-    let score = 0;
+
+    let currentScore = 0;
     let highscore = Number(localStorage.getItem("highscore") || 0);
 
-    let isPaused = false;
+    let paused = true;
 
-    let gameState = ["main menu", "running", "paused", "game over"];
-
-    let timer = 60;
-    let timerIsActive = true;
+    let timer = 30;
+    let timeUp = false;
+    let timerIsActive = false;
 
     let boundaryOceanTop = 280;
 
@@ -139,6 +139,14 @@ function StartGame() {
             });
         }
     };
+
+    function spawnSemicircleWave(amount) {
+        let count = 0;
+        while (count < amount) {
+            setTimeout(() => spawnSemicircle(Math.random() * 2), count * 2000);
+            count++;
+        }
+    }
 
     function removeSemicircle(index) {
         semicircle.splice(index, 1);
@@ -299,12 +307,83 @@ function StartGame() {
         };
     };
 
-    function init() {
-        let count = 0;
-        while (count < 6) {
-            setTimeout(() => spawnSemicircle(Math.random() * 2), count * 2000);
-            count++;
+    function drawCritical() {
+        if (showCritical) {
+            const [cx, cy] = character.position;
+            const imgWidth = 30;
+            const imgHeight = 30;
+            const offsetY = -30;
+            ctx.drawImage(critical, cx + (character.spriteCanvasSize[0] / 2) - (imgWidth / 2), cy + offsetY, imgWidth, imgHeight);
+        };
+    }
+    
+    function drawPressSpace() {
+        ctx.save();
+        ctx.font = "70px 'Bangers'";
+        ctx.fillStyle = "rgb(255,250,250)";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.textAlign = "center";
+        ctx.fillText("Press space to play", canvas.width / 2, canvas.height / 2 - 50);
+        ctx.restore();
+    }
+
+    function drawScore() {
+        ctx.save();
+        ctx.font = "24px 'Bangers'";
+        ctx.fillStyle = "white";
+
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+
+        if (paused) {
+            ctx.textAlign = "center";
+
+            if (currentScore > highscore) {
+                ctx.fillText(`NEW Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2);
+            }
+            else {
+                ctx.fillText(`Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2);
+            }
         }
+        else {
+            ctx.textAlign = "left";
+            ctx.fillText(`Highscore: ${highscore}`, 16, 550);
+            ctx.fillText(`Score: ${currentScore}`, 16, 520);
+        }
+        
+        ctx.restore();
+    };
+
+    function drawTimer() {
+        ctx.save();
+        ctx.font = "24px 'Bangers'";
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.textAlign = "center"
+        ctx.fillText("Time", canvas.width / 2, 520);
+
+        ctx.font = "24px 'Bangers'";
+        if (timer <= 10) {
+            ctx.fillStyle = "red";
+        }
+        else {
+            ctx.fillStyle = "white";
+        }
+        ctx.textAlign = "center";
+        ctx.fillText(`${Math.ceil(timer)}`, canvas.width / 2, 550);
+        ctx.restore();
+    }
+
+    function init() {
+        spawnSemicircleWave(6);
 
         character = Character(
             characterSpriteSheet,
@@ -324,48 +403,18 @@ function StartGame() {
         window.requestAnimationFrame(run);
     };
 
-    function drawScore() {
-        ctx.font = "24px Arial";
-        ctx.fillStyle = "white";
-        ctx.textAlign = "left";
-        ctx.fillText(`Highscore: ${highscore}`, 16, 550);
-        ctx.fillText(`Score: ${score}`, 16, 520);
-    };
-
-    function drawTimer() {
-        ctx.font = "24px Arial";
-        if (timer <= 10) {
-            ctx.fillStyle = "red";
-        } else {
-            ctx.fillStyle = "white";
-        }
-        ctx.textAlign = "center"
-        ctx.fillText("Time", canvas.width / 2, 520);
-
-        ctx.font = "24px Arial";
-        if (timer <= 10) {
-            ctx.fillStyle = "red";
-        } else {
-            ctx.fillStyle = "white";
-        }
-        ctx.textAlign = "center";
-        ctx.fillText(`${Math.ceil(timer)}`, canvas.width / 2, 550);
-    }
-
     function run(timeStamp) {
         if (!lastTimeStamp) lastTimeStamp = timeStamp;
         dt = (timeStamp - lastTimeStamp) / 1000;
         lastTimeStamp = timeStamp;
 
-        if (!isPaused) {
+        if (!paused) {
             update(dt);
             draw();
         }
         else {
-            ctx.font = "40px Arial";
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
+            draw();
+            drawPressSpace();
         }
 
         window.requestAnimationFrame(run);
@@ -402,10 +451,9 @@ function StartGame() {
             timer -= dt;
 
             if (timer <= 0) {
-                timer = 0;
-                timerIsActive = false;
-                isPaused = true;
-                audioBackground.pause();
+                timer = 30;
+                paused = true;
+                timeUp = true;
                 console.log("Time up");
             }
         }
@@ -435,43 +483,33 @@ function StartGame() {
         drawBackground();
         drawSemicircle();
         character.draw(ctx);
+        drawCritical();
         drawScore();
         drawTimer();
-
-        if (showCritical) {
-            const [cx, cy] = character.position;
-            const imgWidth = 30;
-            const imgHeight = 30;
-            const offsetY = -30;
-            ctx.drawImage(critical, cx + (character.spriteCanvasSize[0] / 2) - (imgWidth / 2), cy + offsetY, imgWidth, imgHeight);
-        };
     };
 
     function doKeyDown(e) {
         e.preventDefault();
 
+        // ESC
         if (e.code === "Escape") {
-            isPaused = !isPaused;
-            if (isPaused) {
-                audioBackground.pause();
-                console.log("Game is paused");
-            }
-            else {
-                audioBackground.play();
-                console.log("Game playing");
+            if (!paused) {
+                paused = !paused;
+                console.log(`Game paused\nTime remaining: ${Math.ceil(timer)}s\n         Score: ${currentScore}\n        paused: ${paused}\n       !paused: ${!paused}`);
             }
             return;
         };
 
+        // SPACE
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
                 audioCollect.play();
 
-                score += 1;
+                currentScore += 1;
 
-                if (score > highscore) {
-                    highscore = score;
-                    localStorage.setItem("highscsore", String(highscore));
+                if (currentScore > highscore) {
+                    highscore = currentScore;
+                    localStorage.setItem("highscore", String(highscore));
                 };
 
                 console.log("Semicircle collected");
@@ -481,10 +519,34 @@ function StartGame() {
                 collidingIndex = -1;
                 showCritical = false;
                 spawnSemicircle(1);
+
+                return;
+            };
+
+            if (paused && !timeUp) {
+                paused = !paused;
+                timerIsActive = true;
+                console.log(`Game resumed\n        paused: ${paused}\n       !paused: ${!paused}`);
+
+                return;
+            }
+            else if (paused && timeUp) {
+                currentScore = 0;
+                paused = !paused;
+                console.log("New game");
+
+                character.position = [0, 400];
+                character.lastAction = "";
+                character.direction = [0, 0];
+
+                semicircle.length = 0;
+                spawnSemicircleWave(6);
+
+                return;
             };
         };
 
-        if (!isPaused) character.doKeyInput(e.key, true);
+        if (!paused) character.doKeyInput(e.key, true);
     };
 
     function doKeyUp(e) {
