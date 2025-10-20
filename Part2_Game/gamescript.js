@@ -1,3 +1,6 @@
+const canvas = document.getElementById('gamecanvas');
+const ctx = canvas.getContext('2d');
+
 function StartGame() {
     // Credit: CraftPix.net 2D Game Assets on opengameart.org
     // https://opengameart.org/content/pixel-ocean-and-sky-background
@@ -32,24 +35,20 @@ function StartGame() {
     // Credit: Kayrabey07 on freessound.org
     // https://freesound.org/s/543934/
     var audioMissed = new Audio("./assets/sounds/543934__kayrabey07__uuhhh.mp3");
+    audioMissed.volume = 0.5;
 
     // Credit: Doctor_Dreamchip on freesound.org
     // https://freesound.org/people/Doctor_Dreamchip/sounds/429347/
     var audioBackground = new Audio("./assets/sounds/429347__doctor_dreamchip__2018-05-19.wav");
     audioBackground.loop = true;
+    audioBackground.volume = 0.2;
     audioBackground.play();
 
     const awaitLoadCount = 4;
     let loadCount = 0;
 
-    let canvas = document.getElementById('gamecanvas');
-    let ctx = canvas.getContext('2d');
-
-    // Timing
     let lastTimeStamp = 0;
     let dt;
-
-    let isPaused = false;
     
     let character;
     let charMoveSpeed = 95;
@@ -57,20 +56,27 @@ function StartGame() {
     
     let semicircle = [];
     let semiRadius = 12;
-
     let semiMaxSpeed = 90;
     let semiMinSpeed = 80;
-
+    
     let showHitbox = false;
+    
     let showCritical = false;
     let collidingIndex = -1;
-
+    
     let score = 0;
     let highscore = Number(localStorage.getItem("highscore") || 0);
-    
-    const boundaryOceanTop = 280;
 
-    const cloud = {
+    let isPaused = false;
+
+    let gameState = ["main menu", "running", "paused", "game over"];
+
+    let timer = 60;
+    let timerIsActive = true;
+
+    let boundaryOceanTop = 280;
+
+    let cloud = {
         x: 0,
         speed: 35
     };
@@ -98,7 +104,6 @@ function StartGame() {
             ctx.stroke();
             ctx.closePath();
 
-            // Hitbox
             const semiHitbox = {
                 x: sc.x - sc.radius,
                 y: sc.y - sc.radius,
@@ -168,7 +173,7 @@ function StartGame() {
                 return {
                     x: this.position[0] + this.hitbox.offsetX,
                     y: this.position[1] + this.hitbox.offsetY,
-                    width:  this.hitbox.width,
+                    width: this.hitbox.width,
                     height: this.hitbox.height
                 };
             },
@@ -327,6 +332,26 @@ function StartGame() {
         ctx.fillText(`Score: ${score}`, 16, 520);
     };
 
+    function drawTimer() {
+        ctx.font = "24px Arial";
+        if (timer <= 10) {
+            ctx.fillStyle = "red";
+        } else {
+            ctx.fillStyle = "white";
+        }
+        ctx.textAlign = "center"
+        ctx.fillText("Time", canvas.width / 2, 520);
+
+        ctx.font = "24px Arial";
+        if (timer <= 10) {
+            ctx.fillStyle = "red";
+        } else {
+            ctx.fillStyle = "white";
+        }
+        ctx.textAlign = "center";
+        ctx.fillText(`${Math.ceil(timer)}`, canvas.width / 2, 550);
+    }
+
     function run(timeStamp) {
         if (!lastTimeStamp) lastTimeStamp = timeStamp;
         dt = (timeStamp - lastTimeStamp) / 1000;
@@ -370,13 +395,24 @@ function StartGame() {
                 audioMissed.play();
                 removeSemicircle(i);
                 spawnSemicircle(1);
+            };
+        };
+
+        if (timerIsActive) {
+            timer -= dt;
+
+            if (timer <= 0) {
+                timer = 0;
+                timerIsActive = false;
+                isPaused = true;
+                audioBackground.pause();
+                console.log("Time up");
             }
         }
 
         const charRect = character.characterHitbox();
         showCritical = false;
         collidingIndex = -1;
-
 
         for (let i = 0; i < semicircle.length; i++) {
             const sc = semicircle[i];
@@ -385,13 +421,13 @@ function StartGame() {
                 y: sc.y - sc.radius,
                 width: sc.radius * 2,
                 height: sc.radius
-            };
+            }
             if (checkCollision(charRect, semiRect)) {
                 console.log("Collision detected");
                 showCritical = true;
                 collidingIndex = i;
                 break;
-            };
+            }
         };
     };
 
@@ -400,6 +436,7 @@ function StartGame() {
         drawSemicircle();
         character.draw(ctx);
         drawScore();
+        drawTimer();
 
         if (showCritical) {
             const [cx, cy] = character.position;
@@ -407,12 +444,12 @@ function StartGame() {
             const imgHeight = 30;
             const offsetY = -30;
             ctx.drawImage(critical, cx + (character.spriteCanvasSize[0] / 2) - (imgWidth / 2), cy + offsetY, imgWidth, imgHeight);
-        }
+        };
     };
 
     function doKeyDown(e) {
         e.preventDefault();
-        
+
         if (e.code === "Escape") {
             isPaused = !isPaused;
             if (isPaused) {
@@ -424,7 +461,7 @@ function StartGame() {
                 console.log("Game playing");
             }
             return;
-        }
+        };
 
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
             if (collidingIndex !== -1) {
@@ -435,27 +472,25 @@ function StartGame() {
                 if (score > highscore) {
                     highscore = score;
                     localStorage.setItem("highscsore", String(highscore));
-                }
-                
+                };
+
                 console.log("Semicircle collected");
                 console.log("+1 Score");
-                
+
                 removeSemicircle(collidingIndex);
                 collidingIndex = -1;
                 showCritical = false;
                 spawnSemicircle(1);
-            }
-        }
-        
-        if (!isPaused) {
-            character.doKeyInput(e.key, true);
-        }
+            };
+        };
+
+        if (!isPaused) character.doKeyInput(e.key, true);
     };
 
     function doKeyUp(e) {
         e.preventDefault();
         character.doKeyInput(e.key, false);
     };
-}
+};
 
 StartGame();
