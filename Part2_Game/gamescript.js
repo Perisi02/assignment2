@@ -30,20 +30,19 @@ function StartGame() {
 
     // Credit: s11it0 on freesound.org
     // https://freesound.org/s/620668/
-    var audioCollect = new Audio("./assets/sounds/620668__s11it0__happy-coin.wav");
+    const audioCollect = new Audio("./assets/sounds/620668__s11it0__happy-coin.wav");
     audioCollect.volume = 0.5;
 
     // Credit: Kayrabey07 on freessound.org
     // https://freesound.org/s/543934/
-    var audioMissed = new Audio("./assets/sounds/543934__kayrabey07__uuhhh.mp3");
+    const audioMissed = new Audio("./assets/sounds/543934__kayrabey07__uuhhh.mp3");
     audioMissed.volume = 0.5;
 
     // Credit: Doctor_Dreamchip on freesound.org
     // https://freesound.org/people/Doctor_Dreamchip/sounds/429347/
-    var audioBackground = new Audio("./assets/sounds/429347__doctor_dreamchip__2018-05-19.wav");
+    const audioBackground = new Audio("./assets/sounds/429347__doctor_dreamchip__2018-05-19.wav");
     audioBackground.loop = true;
     audioBackground.volume = 0.2;
-    audioBackground.play();
 
     const awaitLoadCount = 4;
     let loadCount = 0;
@@ -70,8 +69,9 @@ function StartGame() {
 
     let paused = true;
 
-    let timer = 30;
-    let timeUp = false;
+    let defaultTimer = 60;
+    let timer = defaultTimer;
+    let timerUp = false;
     let timerIsActive = false;
 
     let boundaryOceanTop = 280;
@@ -148,7 +148,7 @@ function StartGame() {
         }
     }
 
-    function removeSemicircle(index) {
+    function removeThisSemicircle(index) {
         semicircle.splice(index, 1);
     };
 
@@ -371,14 +371,14 @@ function StartGame() {
         ctx.fillText("Time", canvas.width / 2, 520);
 
         ctx.font = "24px 'Bangers'";
-        if (timer <= 10) {
+        if (defaultTimer <= 10) {
             ctx.fillStyle = "red";
         }
         else {
             ctx.fillStyle = "white";
         }
         ctx.textAlign = "center";
-        ctx.fillText(`${Math.ceil(timer)}`, canvas.width / 2, 550);
+        ctx.fillText(`${Math.ceil(defaultTimer)}`, canvas.width / 2, 550);
         ctx.restore();
     }
 
@@ -441,19 +441,20 @@ function StartGame() {
 
             if (sc.x + sc.radius < 0) {
                 console.log("Semicircle missed");
+                audioMissed.currentTime = 0;
                 audioMissed.play();
-                removeSemicircle(i);
+                removeThisSemicircle(i);
                 spawnSemicircle(1);
             };
         };
 
         if (timerIsActive) {
-            timer -= dt;
+            defaultTimer -= dt;
 
-            if (timer <= 0) {
-                timer = 30;
+            if (defaultTimer <= 0) {
+                defaultTimer = 60;
                 paused = true;
-                timeUp = true;
+                timerUp = true;
                 console.log("Time up");
             }
         }
@@ -495,14 +496,19 @@ function StartGame() {
         if (e.code === "Escape") {
             if (!paused) {
                 paused = !paused;
-                console.log(`Game paused\nTime remaining: ${Math.ceil(timer)}s\n         Score: ${currentScore}\n        paused: ${paused}\n       !paused: ${!paused}`);
+                console.log(`Game paused\nTime remaining: ${Math.ceil(defaultTimer)}s\n         Score: ${currentScore}\n        paused: ${paused}\n       !paused: ${!paused}`);
             }
             return;
         };
 
         // SPACE
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
+            if (audioBackground.paused) {
+                audioBackground.play();
+            };
+
             if (collidingIndex !== -1) {
+                audioCollect.currentTime = 0;
                 audioCollect.play();
 
                 currentScore += 1;
@@ -515,7 +521,7 @@ function StartGame() {
                 console.log("Semicircle collected");
                 console.log("+1 Score");
 
-                removeSemicircle(collidingIndex);
+                removeThisSemicircle(collidingIndex);
                 collidingIndex = -1;
                 showCritical = false;
                 spawnSemicircle(1);
@@ -523,22 +529,21 @@ function StartGame() {
                 return;
             };
 
-            if (paused && !timeUp) {
+            if (paused && !timerUp) {
                 paused = !paused;
                 timerIsActive = true;
                 console.log(`Game resumed\n        paused: ${paused}\n       !paused: ${!paused}`);
 
                 return;
             }
-            else if (paused && timeUp) {
-                currentScore = 0;
+            else if (paused && timerUp) {               
                 paused = !paused;
                 console.log("New game");
 
+                currentScore = 0;
                 character.position = [0, 400];
                 character.lastAction = "";
                 character.direction = [0, 0];
-
                 semicircle.length = 0;
                 spawnSemicircleWave(6);
 
