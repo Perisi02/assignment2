@@ -76,7 +76,7 @@ function StartGame() {
 
     let currentScore = 0;
     let highscore = Number(localStorage.getItem("highscore") || 0);
-    let newHighscore;
+    let newHighscore = false;
 
     let paused = true;
 
@@ -452,14 +452,16 @@ function StartGame() {
         audioStartGame.currentTime = 0;
         audioStartGame.play();
 
-        paused = !paused;
-        console.log("New game");
-
+        
         currentScore = 0;
         character.position = [0, 400];
         character.lastAction = "";
         character.direction = [0, 0];
         semicircle.length = 0;
+        newHighscore = false;
+
+        paused = !paused;
+        console.log("New game");
         spawnSemicircleWave(6);
     };
 
