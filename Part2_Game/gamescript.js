@@ -64,15 +64,19 @@ function StartGame() {
     let showCritical = false;
     let collidingIndex = -1;
 
-    let currentScore = 0;
+    let currentScore = 70;
     let highscore = Number(localStorage.getItem("highscore") || 0);
+    let newHighscore;
 
     let paused = true;
 
-    let defaultTimer = 60;
-    let timer = defaultTimer;
-    let timerUp = false;
+    let defaultTime = 60;
+    let adjustedTime = defaultTime;
+    let maxTimer = 120;
+    let minTimer = 30;
+    let timerUp = true;
     let timerIsActive = false;
+    let timerIsAdjustable = true;
 
     let boundaryOceanTop = 280;
 
@@ -150,6 +154,30 @@ function StartGame() {
 
     function removeThisSemicircle(index) {
         semicircle.splice(index, 1);
+    };
+
+    function collectSemicircle() {
+        audioCollect.currentTime = 0;
+        audioCollect.play();
+
+        currentScore += 1;
+
+        if (currentScore > highscore) {
+            highscore = currentScore;
+            localStorage.setItem("highscore", String(highscore));
+            newHighscore = true;
+        }
+        else {
+            newHighscore = false;
+        }
+
+        console.log("Semicircle collected");
+        console.log("+1 Score");
+
+        removeThisSemicircle(collidingIndex);
+        collidingIndex = -1;
+        showCritical = false;
+        spawnSemicircle(1);
     };
 
     // Create and return a new Character object.
@@ -343,7 +371,7 @@ function StartGame() {
         if (paused) {
             ctx.textAlign = "center";
 
-            if (currentScore > highscore) {
+            if (newHighscore) {
                 ctx.fillText(`NEW Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2);
             }
             else {
@@ -352,8 +380,8 @@ function StartGame() {
         }
         else {
             ctx.textAlign = "left";
+            ctx.fillText(`Score: ${currentScore}`, 64, 520);
             ctx.fillText(`Highscore: ${highscore}`, 16, 550);
-            ctx.fillText(`Score: ${currentScore}`, 16, 520);
         }
         
         ctx.restore();
@@ -371,16 +399,55 @@ function StartGame() {
         ctx.fillText("Time", canvas.width / 2, 520);
 
         ctx.font = "24px 'Bangers'";
-        if (defaultTimer <= 10) {
+        if (defaultTime <= 10) {
             ctx.fillStyle = "red";
         }
         else {
             ctx.fillStyle = "white";
         }
         ctx.textAlign = "center";
-        ctx.fillText(`${Math.ceil(defaultTimer)}`, canvas.width / 2, 550);
+        ctx.fillText(`${Math.ceil(defaultTime)}`, canvas.width / 2, 550);
         ctx.restore();
     }
+
+    function drawAddTime() {
+        ctx.save();
+        ctx.font = "50px 'Bangers'";
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.textAlign = "center"
+        ctx.fillText("+", canvas.width / 2 + 30, 555);
+        ctx.restore();
+    }
+
+    function drawMinusTime() {
+        ctx.save();
+        ctx.font = "50px 'Bangers'";
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.textAlign = "center"
+        ctx.fillText("-", canvas.width / 2 - 35, 558);
+        ctx.restore();
+    }
+    
+    function startNewGame() {
+        paused = !paused;
+        console.log("New game");
+
+        timer
+        currentScore = 0;
+        character.position = [0, 400];
+        character.lastAction = "";
+        character.direction = [0, 0];
+        semicircle.length = 0;
+        spawnSemicircleWave(6);
+    };
 
     function init() {
         spawnSemicircleWave(6);
@@ -399,6 +466,7 @@ function StartGame() {
 
         document.addEventListener("keydown", doKeyDown);
         document.addEventListener("keyup", doKeyUp);
+        document.addEventListener("click", doClick);
 
         window.requestAnimationFrame(run);
     };
@@ -415,6 +483,10 @@ function StartGame() {
         else {
             draw();
             drawPressSpace();
+            if (timerUp) {
+                drawAddTime();
+                drawMinusTime();
+            }
         }
 
         window.requestAnimationFrame(run);
@@ -449,12 +521,14 @@ function StartGame() {
         };
 
         if (timerIsActive) {
-            defaultTimer -= dt;
+            defaultTime -= dt;
 
-            if (defaultTimer <= 0) {
-                defaultTimer = 60;
+            if (defaultTime <= 0) {
+                defaultTime = adjustedTime;
+                timerIsActive = false;
                 paused = true;
                 timerUp = true;
+                timerIsAdjustable = true;
                 console.log("Time up");
             }
         }
@@ -496,7 +570,13 @@ function StartGame() {
         if (e.code === "Escape") {
             if (!paused) {
                 paused = !paused;
-                console.log(`Game paused\nTime remaining: ${Math.ceil(defaultTimer)}s\n         Score: ${currentScore}\n        paused: ${paused}\n       !paused: ${!paused}`);
+                timerIsAdjustable = timerUp;
+                console.log(`Game paused\n` +
+                            ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
+                            `Time adjustable: ${timerIsAdjustable}\n` +
+                            `          Score: ${currentScore}\n` +
+                            `         paused: ${paused}\n` +
+                            `        !paused: ${!paused}`);
             }
             return;
         };
@@ -507,47 +587,24 @@ function StartGame() {
                 audioBackground.play();
             };
 
-            if (collidingIndex !== -1) {
-                audioCollect.currentTime = 0;
-                audioCollect.play();
-
-                currentScore += 1;
-
-                if (currentScore > highscore) {
-                    highscore = currentScore;
-                    localStorage.setItem("highscore", String(highscore));
-                };
-
-                console.log("Semicircle collected");
-                console.log("+1 Score");
-
-                removeThisSemicircle(collidingIndex);
-                collidingIndex = -1;
-                showCritical = false;
-                spawnSemicircle(1);
-
-                return;
-            };
-
-            if (paused && !timerUp) {
+            if (collidingIndex !== -1 && !paused) {
+                collectSemicircle();
+            } else if (paused && !timerUp) {
                 paused = !paused;
                 timerIsActive = true;
-                console.log(`Game resumed\n        paused: ${paused}\n       !paused: ${!paused}`);
-
-                return;
-            }
-            else if (paused && timerUp) {               
-                paused = !paused;
-                console.log("New game");
-
-                currentScore = 0;
-                character.position = [0, 400];
-                character.lastAction = "";
-                character.direction = [0, 0];
-                semicircle.length = 0;
-                spawnSemicircleWave(6);
-
-                return;
+                timerIsAdjustable = false;
+                console.log(`Game resumed\n` +
+                            ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
+                            `Time adjustable: ${timerIsAdjustable}\n` +
+                            `          Score: ${currentScore}\n` +
+                            `         paused: ${paused}\n` +
+                            `        !paused: ${!paused}`);
+            } else if (paused && timerUp) {
+                timerUp = false;
+                timerIsAdjustable = true;
+                timerIsActive = true;
+                adjustedTime = defaultTime;
+                startNewGame();            
             };
         };
 
@@ -558,6 +615,44 @@ function StartGame() {
         e.preventDefault();
         character.doKeyInput(e.key, false);
     };
+
+    function doClick(e) {
+        if (!timerIsAdjustable) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const addTimerX = canvas.width / 2 + 30;
+        const addTimerY = 555;
+        const addTimerSize = 50;
+        
+        const minusTimerX = canvas.width / 2 - 35;
+        const minusTimerY = 558;
+        const minusTimerSize = 50;
+
+        if (
+            defaultTime < maxTimer &&
+            mouseX > addTimerX &&
+            mouseX < addTimerX + addTimerSize &&
+            mouseY > addTimerY - addTimerSize &&
+            mouseY < addTimerY
+        ) {
+            defaultTime += 5;
+            console.log("Timer increased +5seconds");
+        };
+
+        if (
+            defaultTime > minTimer &&
+            mouseX > minusTimerX &&
+            mouseX < minusTimerX + minusTimerSize &&
+            mouseY > minusTimerY - minusTimerSize &&
+            mouseY < minusTimerY
+        ) {
+            defaultTime -= 5;
+            console.log("Timer decreased -5seconds");
+        };
+    }
 };
 
 StartGame();
