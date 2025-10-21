@@ -44,6 +44,16 @@ function StartGame() {
     audioBackground.loop = true;
     audioBackground.volume = 0.2;
 
+    // Credit: plasterbrain on freesound.org
+    // https://freesound.org/people/plasterbrain/sounds/243020/
+    const audioStartGame = new Audio("./assets/sounds/243020__plasterbrain__game-start.ogg");
+    audioStartGame.volume = 0.5;
+
+    // Credit: cabled_mess on freesound.org
+    // https://freesound.org/people/cabled_mess/sounds/350980/
+    const audioEndGame = new Audio("./assets/sounds/350980__cabled_mess__lose_c_08.wav");
+    audioEndGame.volume = 0.5;
+
     const awaitLoadCount = 4;
     let loadCount = 0;
 
@@ -64,7 +74,7 @@ function StartGame() {
     let showCritical = false;
     let collidingIndex = -1;
 
-    let currentScore = 70;
+    let currentScore = 0;
     let highscore = Number(localStorage.getItem("highscore") || 0);
     let newHighscore;
 
@@ -77,6 +87,8 @@ function StartGame() {
     let timerUp = true;
     let timerIsActive = false;
     let timerIsAdjustable = true;
+
+    let spaceDisabled = false;
 
     let boundaryOceanTop = 280;
 
@@ -437,6 +449,9 @@ function StartGame() {
     }
     
     function startNewGame() {
+        audioStartGame.currentTime = 0;
+        audioStartGame.play();
+
         paused = !paused;
         console.log("New game");
 
@@ -526,7 +541,19 @@ function StartGame() {
                 paused = true;
                 timerUp = true;
                 timerIsAdjustable = true;
+
+                audioEndGame.currentTime = 0;
+                audioEndGame.play();
+
                 console.log("Time up");
+                console.log("Space key disabled for 1s");
+
+                setTimeout(() => {
+                    spaceDisabled = false;
+                    console.log("Space key re-enabled")
+                }, 1000);
+                spaceDisabled = true;
+
             }
         }
 
@@ -580,6 +607,11 @@ function StartGame() {
 
         // SPACE
         if ((e.code === "Space" || e.key === " ") && !e.repeat) {
+            if (spaceDisabled) {
+                console.log("Space key temporarily disabled");
+                return;
+            }
+
             if (audioBackground.paused) {
                 audioBackground.play();
             };
