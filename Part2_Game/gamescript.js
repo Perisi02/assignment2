@@ -440,7 +440,6 @@ function StartGame() {
         paused = !paused;
         console.log("New game");
 
-        timer
         currentScore = 0;
         character.position = [0, 400];
         character.lastAction = "";
@@ -450,8 +449,6 @@ function StartGame() {
     };
 
     function init() {
-        spawnSemicircleWave(6);
-
         character = Character(
             characterSpriteSheet,
             [128, 48],
