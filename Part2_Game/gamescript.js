@@ -40,41 +40,56 @@ function StartGame() {
     // https://freesound.org/people/Doctor_Dreamchip/sounds/429347/
     const audioBackground = new Audio("./assets/sounds/429347__doctor_dreamchip__2018-05-19.wav");
     audioBackground.loop = true;
-
+    
     // Credit: plasterbrain on freesound.org
     // https://freesound.org/people/plasterbrain/sounds/243020/
     const audioStartGame = new Audio("./assets/sounds/243020__plasterbrain__game-start.ogg");
-
+    
     // Credit: cabled_mess on freesound.org
     // https://freesound.org/people/cabled_mess/sounds/350980/
     const audioEndGame = new Audio("./assets/sounds/350980__cabled_mess__lose_c_08.wav");
-
+    
     const awaitLoadCount = 4;
     let loadCount = 0;
-
+    
     let lastTimeStamp = 0;
     let dt;
 
+    // Background variables
+    let boundaryOceanTop = 280;
+    let cloud = {
+        x: 0,
+        speed: 35
+    };
+
+    // Character varibales
     let character;
     let charMoveSpeed = 95;
     let charScale = 0.8;
 
+    // Semicircle/Rubbish variables
     let semicircle = [];
     let semiRadius = 12;
     let semiMaxSpeed = 90;
     let semiMinSpeed = 80;
+    // Top and bottom boundary for the semicircle
+    let semiMaxY = canvas.height - 100;
+    let semiMinY = boundaryOceanTop + 50;
 
+    // Variable for the hitbox
     let showHitbox = false;
-
     let showCritical = false;
     let collidingIndex = -1;
 
+    // Scoring variables
     let currentScore = 0;
     let highscore = Number(localStorage.getItem("highscore") || 0);
     let newHighscore = false;
 
+    // Gamestate
     let paused = true;
 
+    // Timer variables
     let defaultTime = 60;
     let adjustedTime = defaultTime;
     let maxTimer = 120;
@@ -83,26 +98,16 @@ function StartGame() {
     let timerIsActive = false;
     let timerIsAdjustable = true;
 
-    let masterVolume  = 0.5;
+    // Volume control variables
+    let masterVolume = 0.5;
     let maxVolume = 1.0;
     let minVolume = 0.0;
     let volumeStep = 0.1;
     let volumeIsAdjustable = true;
 
-    audioBackground.volume = maxVolume * 0.4;
-    audioCollect.volume = maxVolume;
-    audioEndGame.volume = masterVolume;
-    audioMissed.volume = masterVolume;
-    audioStartGame.volume = masterVolume;
-
+    // In case the player is spamming space,
+    // this variable is for stopping an accidental new game
     let spaceDisabled = false;
-
-    let boundaryOceanTop = 280;
-
-    let cloud = {
-        x: 0,
-        speed: 35
-    };
 
     function load() {
         loadCount++;
@@ -111,11 +116,14 @@ function StartGame() {
         }
     };
 
+    // Draws the ocean and cloud images
     function drawBackground() {
         ctx.drawImage(backgroundOcean, 0, 0, canvas.width, canvas.height);
         ctx.drawImage(backgroundCloud, cloud.x, -100, canvas.width, canvas.height);
     };
 
+    // Draws a semicircle with a hitbox.
+    // Hitbox visibility depends on showHitbox
     function drawSemicircle() {
         for (let sc of semicircle) {
             ctx.beginPath();
@@ -127,6 +135,7 @@ function StartGame() {
             ctx.stroke();
             ctx.closePath();
 
+            // Semicircle hitbox
             const semiHitbox = {
                 x: sc.x - sc.radius,
                 y: sc.y - sc.radius,
@@ -142,46 +151,55 @@ function StartGame() {
         }
     };
 
-    function spawnSemicircle(amount) {
-        let semiMaxY = canvas.height - 100;
-        let semiMinY = boundaryOceanTop + 50;
-
+    // Adds the semicircle to the semicircle array
+    // Param: amount - Number of semicircles to be added to the semicircle array
+    function addSemicircle(amount) {
         for (let i = 0; i < amount; i++) {
             semicircle.push({
                 x: canvas.width + 30,
                 y: Math.random() * (semiMaxY - semiMinY) + semiMinY,
                 baseRadius: semiRadius,
-
+                // Variables for the semicircle bobbing effect
                 amplitude: 0.8,
                 frequency: 1.5,
                 phase: Math.random() * Math.PI * 2,
                 t: 0,
-
                 radius: semiRadius,
+                // Gives a different colour for each new semicircle
                 color: `hsl(${Math.random() * 360}, 70%, 60%)`,
                 speed: Math.random() * (semiMaxSpeed - semiMinSpeed) + semiMinSpeed
             });
         }
     };
 
+    // Spawns a number of semicircles every 2 seconds, stops after the desired amount is reached.
+    // Only used at the beginning of a round
+    // Param: amount - Number of semicircles to be spawned in a wave
     function spawnSemicircleWave(amount) {
         let count = 0;
         while (count < amount) {
-            setTimeout(() => spawnSemicircle(Math.random() * 2), count * 2000);
+            setTimeout(() => addSemicircle(Math.random() * 2), count * 2000);
             count++;
         }
     }
 
+    // Removes a semicircle object from the semicircle array at the specific index
+    // Param: index - index number
     function removeThisSemicircle(index) {
         semicircle.splice(index, 1);
     };
 
+    // Plays collect sound, adds to current score, removes the currently colliding
+    // semicircle & critical image, and finally spawns in a new semicircle replacing the collected semicircle
     function collectSemicircle() {
+        // Sound - Spammable if collecting multiple semicircles
         audioCollect.currentTime = 0;
         audioCollect.play();
 
+        // Score
         currentScore += 1;
 
+        // Saves the current score if it beats the current highscore triggering a 'new' highscore
         if (currentScore > highscore) {
             highscore = currentScore;
             localStorage.setItem("highscore", String(highscore));
@@ -197,7 +215,7 @@ function StartGame() {
         removeThisSemicircle(collidingIndex);
         collidingIndex = -1;
         showCritical = false;
-        spawnSemicircle(1);
+        addSemicircle(1);
     };
 
     // Create and return a new Character object.
@@ -205,6 +223,8 @@ function StartGame() {
     // Param: spriteSize = Array of 2 numbers [width, height]
     // Param: spriteFrames = 3D array[Tracks[Frames[Frame X, Y]]]
     // Param: spriteScale = Number to scale sprite size -> canvas size
+    // Credit: Week 9 exercise - Advanced canvas on Moodle
+    // https://moodle.unitec.ac.nz/pluginfile.php/1342931/mod_resource/content/2/Exercise%20-%20Advanced%20Canvas.pdf
     function Character(spritesheet, spriteSize, spriteFrames, spriteScale) {
         return {
             spriteSheet: spritesheet,
@@ -225,6 +245,7 @@ function StartGame() {
             direction: [0, 0],
             velocity: charMoveSpeed,
 
+            // Added hitbox for character
             characterHitbox() {
                 return {
                     x: this.position[0] + this.hitbox.offsetX,
@@ -355,6 +376,7 @@ function StartGame() {
         };
     };
 
+    // Draws the critical image above the character
     function drawCritical() {
         if (showCritical) {
             const [cx, cy] = character.position;
@@ -364,11 +386,15 @@ function StartGame() {
             ctx.drawImage(critical, cx + (character.spriteCanvasSize[0] / 2) - (imgWidth / 2), cy + offsetY, imgWidth, imgHeight);
         };
     }
-    
+
+    // Draws menu text. Text drawn depends on the state of the game.
+    // Before new game & game over - "Press space to play"
+    // During paused - "Game paused" "Press space to resume"
     function drawPressSpace() {
         ctx.save();
         ctx.font = "70px 'Bangers'";
         ctx.fillStyle = "rgb(255,250,250)";
+        // Shadow on text to make it stand out more
         ctx.shadowColor = "black";
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 2;
@@ -391,21 +417,21 @@ function StartGame() {
         else {
             ctx.fillText("Press space to play", canvas.width / 2, canvas.height / 2 - 50);
         }
-
-
         ctx.restore();
     }
 
+    // Draws score, highscore, and new highscore texts in canvas
     function drawScore() {
         ctx.save();
         ctx.font = "24px 'Bangers'";
         ctx.fillStyle = "white";
-
         ctx.shadowColor = "black";
         ctx.shadowBlur = 2;
         ctx.shadowOffsetX = 2;
         ctx.shadowOffsetY = 2;
 
+        // Shifts the location of the score when game is paused or gameover.
+        // Shows "new highscore" only when the highscore's been beat
         if (paused) {
             ctx.textAlign = "center";
 
@@ -421,14 +447,16 @@ function StartGame() {
             ctx.fillText(`Score: ${currentScore}`, 64, 520);
             ctx.fillText(`Highscore: ${highscore}`, 16, 550);
         }
-        
+
         ctx.restore();
     };
 
+    // Draws the game timer at the bottom of the canvas
     function drawTimer() {
         ctx.save();
         ctx.font = "24px 'Bangers'";
         ctx.fillStyle = "white";
+        // To make the white text stand out
         ctx.shadowColor = "black";
         ctx.shadowBlur = 2;
         ctx.shadowOffsetX = 2;
@@ -436,7 +464,7 @@ function StartGame() {
         ctx.textAlign = "center"
         ctx.fillText("Time", canvas.width / 2, 520);
 
-        ctx.font = "24px 'Bangers'";
+        // Change colour during last 10 seconds
         if (defaultTime <= 10) {
             ctx.fillStyle = "red";
         }
@@ -448,6 +476,7 @@ function StartGame() {
         ctx.restore();
     }
 
+    // Draws the '+' text next to the timer
     function drawAddTime() {
         ctx.save();
         ctx.font = "50px 'Bangers'";
@@ -461,6 +490,7 @@ function StartGame() {
         ctx.restore();
     }
 
+    // Draws the '-' text next to the timer
     function drawMinusTime() {
         ctx.save();
         ctx.font = "50px 'Bangers'";
@@ -474,6 +504,7 @@ function StartGame() {
         ctx.restore();
     }
 
+    // Draws the "- volume +" on the menu screen
     function drawVolumeControls() {
         ctx.save();
         ctx.font = "24px 'Bangers'";
@@ -492,6 +523,8 @@ function StartGame() {
         ctx.restore();
     }
 
+    // Sets the volume for all imported audios
+    // Param: volume - Number for volume e.g. 1.0 for 100% 0.5 for 50%
     function setAllVolume(volume) {
         audioBackground.volume = volume * 0.4;
         audioCollect.volume = volume;
@@ -499,12 +532,13 @@ function StartGame() {
         audioMissed.volume = volume;
         audioStartGame.volume = volume;
     }
-    
+
+    // Plays new game audio, resets character position, empties the semicircle array, and
+    // sets the score to 0 before spawning in new semicircles for the round
     function startNewGame() {
         audioStartGame.currentTime = 0;
         audioStartGame.play();
 
-        
         currentScore = 0;
         character.position = [0, 400];
         character.lastAction = "";
@@ -517,7 +551,12 @@ function StartGame() {
         spawnSemicircleWave(6);
     };
 
+    // Creates the character with Character().
+    // Initialises the character sprite and movement.
+    // Adds event listeners for key and mouse input.
+    // Starts the animation loop.
     function init() {
+        // Character
         character = Character(
             characterSpriteSheet,
             [128, 48],
@@ -527,16 +566,21 @@ function StartGame() {
             ],
             charScale
         );
-
         character.init();
 
+        // Event listeners
         document.addEventListener("keydown", doKeyDown);
         document.addEventListener("keyup", doKeyUp);
         document.addEventListener("click", doClick);
 
+        // Animation loop
         window.requestAnimationFrame(run);
     };
 
+    // Calculates delta time (dt) between frames for animation. Updates and redraws
+    // the game elements when the game is active. When the game is paused, this
+    // displays the menu screen. Recursive function to maintain animation loop.
+    // Param: timeStamp - The current timeStamp provided by requestAnimationFrame.
     function run(timeStamp) {
         if (!lastTimeStamp) lastTimeStamp = timeStamp;
         dt = (timeStamp - lastTimeStamp) / 1000;
@@ -559,12 +603,20 @@ function StartGame() {
         window.requestAnimationFrame(run);
     };
 
+    // Checks whether two rectangular objects overlap and then returns boolean value.
+    // When the objects bounding boxes overlap, returns true else it returns false.
+    // Param: rect1 - The first object with a bounding box
+    // Param: rect2 - The second object with a bounding box
     function checkCollision(rect1, rect2) {
         const xOverlap = rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x;
         const yOverlap = rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y;
         return xOverlap && yOverlap;
     };
 
+    // Updates all active game elements each frame.
+    // Moves background clouds, updates the character, and moves semicircles across the screen.
+    // Checks for collisions, updates the timer, plays sounds, and handles end-of-round logic.
+    // Param: dt - Time difference (in seconds) since the last frame.
     function update(dt) {
         cloud.x -= cloud.speed * dt;
         if (cloud.x + canvas.width < 0) cloud.x = canvas.width;
@@ -583,7 +635,7 @@ function StartGame() {
                 audioMissed.currentTime = 0;
                 audioMissed.play();
                 removeThisSemicircle(i);
-                spawnSemicircle(1);
+                addSemicircle(1);
             };
         };
 
@@ -608,7 +660,6 @@ function StartGame() {
                     console.log("Space key re-enabled")
                 }, 1000);
                 spaceDisabled = true;
-
             }
         }
 
@@ -633,6 +684,9 @@ function StartGame() {
         };
     };
 
+    // Draws all visible game elements on the canvas.
+    // Renders the background, semicircles, character, critical icon, score, and timer.
+    // Called every frame after update() to display the current game state.
     function draw() {
         drawBackground();
         drawSemicircle();
@@ -642,10 +696,14 @@ function StartGame() {
         drawTimer();
     };
 
+    // Handles keyboard input for game control.
+    // Toggles pause, starts or resumes the game, and plays background audio when needed.
+    // Also handles character movement using W, A, S, and D keys while the game is active.
+    // Param: e - The keydown event.
     function doKeyDown(e) {
         e.preventDefault();
 
-        // ESC
+    // ESC
         if (e.code === "Escape") {
             if (!paused) {
                 paused = !paused;
@@ -688,17 +746,17 @@ function StartGame() {
                 timerIsActive = true;
                 timerIsAdjustable = false;
                 console.log(`Game resumed\n` +
-                            ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
-                            `Time adjustable: ${timerIsAdjustable}\n` +
-                            `          Score: ${currentScore}\n` +
-                            `         paused: ${paused}\n` +
-                            `        !paused: ${!paused}`);
+                    ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
+                    `Time adjustable: ${timerIsAdjustable}\n` +
+                    `          Score: ${currentScore}\n` +
+                    `         paused: ${paused}\n` +
+                    `        !paused: ${!paused}`);
             } else if (paused && timerUp) {
                 timerUp = false;
                 timerIsAdjustable = true;
                 timerIsActive = true;
                 adjustedTime = defaultTime;
-                startNewGame();            
+                startNewGame();
             };
         };
 
@@ -710,6 +768,10 @@ function StartGame() {
         character.doKeyInput(e.key, false);
     };
 
+    // Handles mouse click interactions on the canvas.
+    // Detects clicks on timer and volume buttons when available.
+    // Adjusts timer length or master volume based on button clicked.
+    // Param: e - The mouse click event.
     function doClick(e) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
