@@ -651,11 +651,21 @@ function StartGame() {
                 paused = !paused;
                 timerIsAdjustable = timerUp;
                 console.log(`Game paused\n` +
-                            ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
-                            `Time adjustable: ${timerIsAdjustable}\n` +
-                            `          Score: ${currentScore}\n` +
-                            `         paused: ${paused}\n` +
-                            `        !paused: ${!paused}`);
+                    ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
+                    `Time adjustable: ${timerIsAdjustable}\n` +
+                    `          Score: ${currentScore}\n` +
+                    `         paused: ${paused}\n` +
+                    `        !paused: ${!paused}`);
+            } else if (paused && !timerUp) {
+                paused = !paused;
+                timerIsActive = true;
+                timerIsAdjustable = false;
+                console.log(`Game resumed\n` +
+                    ` Time remaining: ${Math.ceil(defaultTime)}s\n` +
+                    `Time adjustable: ${timerIsAdjustable}\n` +
+                    `          Score: ${currentScore}\n` +
+                    `         paused: ${paused}\n` +
+                    `        !paused: ${!paused}`);
             }
             return;
         };
