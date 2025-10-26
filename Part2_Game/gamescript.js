@@ -31,28 +31,23 @@ function StartGame() {
     // Credit: s11it0 on freesound.org
     // https://freesound.org/s/620668/
     const audioCollect = new Audio("./assets/sounds/620668__s11it0__happy-coin.wav");
-    audioCollect.volume = 0.5;
 
     // Credit: Kayrabey07 on freessound.org
     // https://freesound.org/s/543934/
     const audioMissed = new Audio("./assets/sounds/543934__kayrabey07__uuhhh.mp3");
-    audioMissed.volume = 0.5;
 
     // Credit: Doctor_Dreamchip on freesound.org
     // https://freesound.org/people/Doctor_Dreamchip/sounds/429347/
     const audioBackground = new Audio("./assets/sounds/429347__doctor_dreamchip__2018-05-19.wav");
     audioBackground.loop = true;
-    audioBackground.volume = 0.2;
 
     // Credit: plasterbrain on freesound.org
     // https://freesound.org/people/plasterbrain/sounds/243020/
     const audioStartGame = new Audio("./assets/sounds/243020__plasterbrain__game-start.ogg");
-    audioStartGame.volume = 0.5;
 
     // Credit: cabled_mess on freesound.org
     // https://freesound.org/people/cabled_mess/sounds/350980/
     const audioEndGame = new Audio("./assets/sounds/350980__cabled_mess__lose_c_08.wav");
-    audioEndGame.volume = 0.5;
 
     const awaitLoadCount = 4;
     let loadCount = 0;
@@ -87,6 +82,18 @@ function StartGame() {
     let timerUp = true;
     let timerIsActive = false;
     let timerIsAdjustable = true;
+
+    let masterVolume  = 0.5;
+    let maxVolume = 1.0;
+    let minVolume = 0.0;
+    let volumeStep = 0.1;
+    let volumeIsAdjustable = true;
+
+    audioBackground.volume = maxVolume * 0.4;
+    audioCollect.volume = maxVolume;
+    audioEndGame.volume = masterVolume;
+    audioMissed.volume = masterVolume;
+    audioStartGame.volume = masterVolume;
 
     let spaceDisabled = false;
 
@@ -144,6 +151,7 @@ function StartGame() {
                 x: canvas.width + 30,
                 y: Math.random() * (semiMaxY - semiMinY) + semiMinY,
                 baseRadius: semiRadius,
+
                 amplitude: 0.8,
                 frequency: 1.5,
                 phase: Math.random() * Math.PI * 2,
@@ -377,7 +385,7 @@ function StartGame() {
             ctx.shadowOffsetX = 2;
             ctx.shadowOffsetY = 2;
             ctx.textAlign = "center";
-            ctx.fillText("Press space to resume", canvas.width / 2, canvas.height / 2 + 100);
+            ctx.fillText("Press space to resume", canvas.width / 2, canvas.height / 2);
             ctx.restore();
         }
         else {
@@ -402,10 +410,10 @@ function StartGame() {
             ctx.textAlign = "center";
 
             if (newHighscore) {
-                ctx.fillText(`NEW Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2);
+                ctx.fillText(`NEW Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2 + 50);
             }
             else {
-                ctx.fillText(`Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2);
+                ctx.fillText(`Highscore: ${highscore}`, canvas.width / 2, canvas.height / 2 + 50);
             }
         }
         else {
@@ -465,6 +473,32 @@ function StartGame() {
         ctx.fillText("-", canvas.width / 2 - 35, 558);
         ctx.restore();
     }
+
+    function drawVolumeControls() {
+        ctx.save();
+        ctx.font = "24px 'Bangers'";
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.textAlign = "center";
+        ctx.fillText("Volume", canvas.width / 2, canvas.height / 2 + 120);
+        ctx.fillText(`${Math.round(masterVolume * 100)}%`, canvas.width / 2, canvas.height / 2 + 150);
+
+        ctx.font = "50px 'Bangers'";
+        ctx.fillText("+", canvas.width / 2 + 35, canvas.height / 2 + 155);
+        ctx.fillText("-", canvas.width / 2 - 45, canvas.height / 2 + 155);
+        ctx.restore();
+    }
+
+    function setAllVolume(volume) {
+        audioBackground.volume = volume * 0.4;
+        audioCollect.volume = volume;
+        audioEndGame.volume = volume;
+        audioMissed.volume = volume;
+        audioStartGame.volume = volume;
+    }
     
     function startNewGame() {
         audioStartGame.currentTime = 0;
@@ -515,6 +549,7 @@ function StartGame() {
         else {
             draw();
             drawPressSpace();
+            drawVolumeControls();
             if (timerUp) {
                 drawAddTime();
                 drawMinusTime();
@@ -666,41 +701,71 @@ function StartGame() {
     };
 
     function doClick(e) {
-        if (!timerIsAdjustable) return;
-
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        const addTimerX = canvas.width / 2 + 30;
-        const addTimerY = 555;
-        const addTimerSize = 50;
-        
-        const minusTimerX = canvas.width / 2 - 35;
-        const minusTimerY = 558;
-        const minusTimerSize = 50;
+        // Timer buttons
+        if (timerIsAdjustable) {
+            const timerButtonSize = 50;
+            const addTimerX = canvas.width / 2 + 30;
+            const addTimerY = 555;
+            const minusTimerX = canvas.width / 2 - 35;
+            const minusTimerY = 558;
 
-        if (
-            defaultTime < maxTimer &&
-            mouseX > addTimerX &&
-            mouseX < addTimerX + addTimerSize &&
-            mouseY > addTimerY - addTimerSize &&
-            mouseY < addTimerY
-        ) {
-            defaultTime += 5;
-            console.log("Timer increased +5seconds");
-        };
+            if (
+                defaultTime < maxTimer &&
+                mouseX > addTimerX &&
+                mouseX < addTimerX + timerButtonSize &&
+                mouseY > addTimerY - timerButtonSize &&
+                mouseY < addTimerY
+            ) {
+                defaultTime += 5;
+                console.log("Timer increased +5seconds");
+            };
 
-        if (
-            defaultTime > minTimer &&
-            mouseX > minusTimerX &&
-            mouseX < minusTimerX + minusTimerSize &&
-            mouseY > minusTimerY - minusTimerSize &&
-            mouseY < minusTimerY
-        ) {
-            defaultTime -= 5;
-            console.log("Timer decreased -5seconds");
-        };
+            if (
+                defaultTime > minTimer &&
+                mouseX > minusTimerX &&
+                mouseX < minusTimerX + timerButtonSize &&
+                mouseY > minusTimerY - timerButtonSize &&
+                mouseY < minusTimerY
+            ) {
+                defaultTime -= 5;
+                console.log("Timer decreased -5seconds");
+            };
+        }
+
+        // Volume buttons
+        if (volumeIsAdjustable) {
+            const volButtonSize = 50;
+            const addVolX = canvas.width / 2 + 35;
+            const addVolY = canvas.height / 2 + 155;
+            const minusVolX = canvas.width / 2 - 45;
+            const minusVolY = canvas.height / 2 + 155;
+
+            if (
+                masterVolume < maxVolume &&
+                mouseX > addVolX &&
+                mouseX < addVolX + volButtonSize &&
+                mouseY > addVolY - volButtonSize &&
+                mouseY < addVolY
+            ) {
+                masterVolume = Math.min(maxVolume, masterVolume + volumeStep);
+                setAllVolume(masterVolume);
+            }
+
+            if (
+                masterVolume > minVolume &&
+                mouseX > minusVolX &&
+                mouseX < minusVolX + volButtonSize &&
+                mouseY > minusVolY - volButtonSize &&
+                mouseY < minusVolY
+            ) {
+                masterVolume = Math.max(minVolume, masterVolume - volumeStep);
+                setAllVolume(masterVolume);
+            }
+        }
     }
 };
 
