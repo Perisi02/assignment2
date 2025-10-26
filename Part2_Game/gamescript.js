@@ -366,7 +366,25 @@ function StartGame() {
         ctx.shadowOffsetX = 2;
         ctx.shadowOffsetY = 2;
         ctx.textAlign = "center";
-        ctx.fillText("Press space to play", canvas.width / 2, canvas.height / 2 - 50);
+
+        if (timerIsActive) {
+            ctx.fillText("Game paused", canvas.width / 2, canvas.height / 2 - 50);
+            ctx.save();
+            ctx.font = "60px 'Bangers'";
+            ctx.fillStyle = "rgb(255,250,250)";
+            ctx.shadowColor = "black";
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.textAlign = "center";
+            ctx.fillText("Press space to resume", canvas.width / 2, canvas.height / 2 + 100);
+            ctx.restore();
+        }
+        else {
+            ctx.fillText("Press space to play", canvas.width / 2, canvas.height / 2 - 50);
+        }
+
+
         ctx.restore();
     }
 
