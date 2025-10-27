@@ -3,28 +3,32 @@ html, body {
   margin: 0;
 }
 
-main {
-  min-height: 100vh;
+body {
   display: flex;
+  min-height: 100vh;
   flex-direction: column;
-  padding: 0 400px;
+}
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .center-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 24px 0;
+  width: 100%;
+  max-width: 900px;
+  padding: 24px;
+  text-align: left;
 }
 
 .instructions, .game-title {
-  align-items: flex-start;
   text-align: left;
 }
 
 canvas {
   display: block;
+  max-width: 100%;
+  height: auto;
   border: 2px solid #333;
 }
