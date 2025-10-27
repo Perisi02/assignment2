@@ -37,7 +37,7 @@ async function loadTours() {
             const showPopup = () => {
                 const currentTour = tours.find(t => t.x === parseInt(div.style.left) && t.y === parseInt(div.style.top));
                 if (!currentTour) return;
-                
+
                 popup.classList.remove('d-none');
                 popup.innerHTML = '';
                 popup.style.left = (currentTour.x + 25) + 'px';
@@ -70,7 +70,7 @@ async function loadTours() {
 
             // Hover events
             let hideTimeout;
-            
+
             const clearHideTimeout = () => {
                 if (hideTimeout) {
                     clearTimeout(hideTimeout);
@@ -173,7 +173,7 @@ async function loadBookings() {
 
 // Display bookings in the list
 function displayBookings() {
-    bookingsContainer.innerHTML = userBookings.length === 0 
+    bookingsContainer.innerHTML = userBookings.length === 0
         ? '<p class="text-muted">No bookings yet</p>'
         : userBookings.map(booking => `
             <div class="list-group-item">
@@ -191,12 +191,12 @@ function displayBookings() {
 // Cancel booking
 async function cancelBooking(bookingId) {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
-    
+
     try {
         const res = await fetch(`http://localhost:3000/api/bookings/${bookingId}`, {
             method: 'DELETE'
         });
-        
+
         if (res.ok) {
             loadBookings();
             loadTours();
@@ -219,7 +219,7 @@ document.getElementById('submitBooking').addEventListener('click', async () => {
     try {
         const res = await fetch('http://localhost:3000/api/bookings', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, tourId, timeIndex, partySize })
         });
 

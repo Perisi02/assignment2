@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Auckland Tour Booking</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Auckland Tour Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="p-3">
 
-<!-- Nav bar -->
+    <!-- Nav bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="../../index.html">Te Wai-o-Tane</a>
@@ -22,52 +24,55 @@
         </div>
     </nav>
 
-<h1>Auckland Tours Booking</h1>
+    <h1>Auckland Tours Booking</h1>
 
-<!-- User Input Section -->
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <input type="text" id="visitorName" class="form-control mb-2" placeholder="Your Name">
-            </div>
-            <div class="col-md-6">
-                <input type="number" id="visitorPartySize" class="form-control mb-2" min="1" max="10" placeholder="Party Size (1-10)">
+    <!-- User Input Section -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" id="visitorName" class="form-control mb-2" placeholder="Your Name">
+                </div>
+                <div class="col-md-6">
+                    <input type="number" id="visitorPartySize" class="form-control mb-2" min="1" max="10"
+                        placeholder="Party Size (1-10)">
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Message area for quick notices -->
-<div id="messageArea" class="mb-3" aria-live="polite"></div>
+    <!-- Message area for quick notices -->
+    <div id="messageArea" class="mb-3" aria-live="polite"></div>
 
-<div id="loader" class="d-flex justify-content-center align-items-center" style="height:600px;">
-    <div class="spinner-border text-primary"></div>
-</div>
-<div id="map" class="d-none"></div>
-<div id="popup" class="d-none"></div>
-<div id="bookingForm" class="d-none">
-    <h5>Book Tour</h5>
-    <input type="text" id="name" class="form-control mb-2" placeholder="Your Name">
-    <input type="number" id="partySize" class="form-control mb-2" min="1" placeholder="Party Size">
-    <select id="launchTime" class="form-select mb-2"></select>
-    <div id="bookingError" class="text-danger small mb-2" aria-live="polite"></div>
-    <button id="submitBooking" class="btn btn-primary mb-2">Submit Booking</button>
-    <button class="btn btn-secondary" onclick="closeBookingForm()">Cancel</button>
-</div>
+    <div id="loader" class="d-flex justify-content-center align-items-center" style="height:600px;">
+        <div class="spinner-border text-primary"></div>
+    </div>
+    <div id="map" class="d-none"></div>
+    <div id="popup" class="d-none"></div>
+    <div id="bookingForm" class="d-none">
+        <h5>Book Tour</h5>
+        <input type="text" id="name" class="form-control mb-2" placeholder="Your Name">
+        <input type="number" id="partySize" class="form-control mb-2" min="1" placeholder="Party Size">
+        <select id="launchTime" class="form-select mb-2"></select>
+        <div id="bookingError" class="text-danger small mb-2" aria-live="polite"></div>
+        <button id="submitBooking" class="btn btn-primary mb-2">Submit Booking</button>
+        <button class="btn btn-secondary" onclick="closeBookingForm()">Cancel</button>
+    </div>
 
-<!-- Bookings List (bottom) -->
-<div id="bookingsList" class="mb-3 mt-3">
-    <h4>Your Bookings</h4>
-    <div class="list-group" id="bookingsContainer"></div>
-</div>
+    <!-- Bookings List (bottom) -->
+    <div id="bookingsList" class="mb-3 mt-3">
+        <h4>Your Bookings</h4>
+        <div class="list-group" id="bookingsContainer"></div>
+    </div>
 
-<footer class="bg-light text-center py-3 mt-auto">
-        <p class="mb-0">@ Group Project Semester 2 2025 as part of ISCG 6420 Internet & Website Development course at Unitec</p>
+    <footer class="bg-light text-center py-3 mt-auto">
+        <p class="mb-0">@ Group Project Semester 2 2025 as part of ISCG 6420 Internet & Website Development course at
+            Unitec</p>
     </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="app.js"></script>
- 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+
 </body>
+
 </html>
